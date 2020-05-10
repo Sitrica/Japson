@@ -7,7 +7,7 @@ Report all issues in our issues tab.
 Maven requires setting up profiles and defining the token else where https://help.github.com/en/github/managing-packages-with-github-packages/configuring-apache-maven-for-use-with-github-packages
 
 ### Gradle
-Latest version can be found at https:/github.com/Sitrica/Japson/packages
+Latest version can be found at https://github.com/Sitrica/Japson/packages
 
 In your `build.gradle` add: 
 ```groovy

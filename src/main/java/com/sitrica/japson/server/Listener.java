@@ -14,6 +14,6 @@ public interface Listener {
 
 	public void onForget(JapsonConnection connection);
 
-	public void onServerShutdown();
+	public void onShutdown();
 
 }

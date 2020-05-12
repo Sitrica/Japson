@@ -75,7 +75,7 @@ public class SocketHandler implements Runnable {
 							}
 						});
 			} catch (InterruptedException | ExecutionException e) {
-				japson.getListeners().forEach(listener -> listener.onServerShutdown());
+				japson.getListeners().forEach(listener -> listener.onShutdown());
 			}
 		}
 	}

@@ -27,53 +27,42 @@ public class JapsonClient extends Japson {
 
 	private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-	protected long HEARTBEAT = 1000L, DELAY = 1000L, EXPIRY = 10; // EXPIRY in minutes, rest in milliseconds.
+	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
 	private final InetAddress address;
 	private final Gson gson;
 	private final int port;
 
-	public JapsonClient(int port, String identification) throws UnknownHostException {
-		this(InetAddress.getLocalHost(), port, identification);
+	public JapsonClient(int port) throws UnknownHostException {
+		this(InetAddress.getLocalHost(), port);
 	}
 
-	public JapsonClient(String host, int port, String identification) throws UnknownHostException {
-		this(InetAddress.getByName(host), port, identification);
+	public JapsonClient(String host, int port) throws UnknownHostException {
+		this(InetAddress.getByName(host), port);
 	}
 
-	public JapsonClient(InetAddress address, int port, String identification) {
-		this(address, port, identification, new GsonBuilder()
+	public JapsonClient(InetAddress address, int port) {
+		this(address, port, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
 				.create());
 	}
 
-	public JapsonClient(int port, String identification, Gson gson) throws UnknownHostException {
-		this(InetAddress.getLocalHost(), port, identification, gson);
+	public JapsonClient(int port, Gson gson) throws UnknownHostException {
+		this(InetAddress.getLocalHost(), port, gson);
 	}
 
-	public JapsonClient(String host, int port, String identification, Gson gson) throws UnknownHostException {
-		this(InetAddress.getByName(host), port, identification, gson);
+	public JapsonClient(String host, int port, Gson gson) throws UnknownHostException {
+		this(InetAddress.getByName(host), port, gson);
 	}
 
-	public JapsonClient(InetAddress address, int port, String identification, Gson gson) {
+	public JapsonClient(InetAddress address, int port, Gson gson) {
 		this.address = address;
 		this.port = port;
 		this.gson = gson;
-		HeartbeatPacket packet = new HeartbeatPacket(identification);
+		HeartbeatPacket packet = new HeartbeatPacket();
 		packets.add(packet);
 		executor.scheduleAtFixedRate(() -> sendPacket(packet), DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
-	}
-
-	/**
-	 * The amount of minutes to wait before forgetting about a connection.
-	 * 
-	 * @param expiry time in minutes.
-	 * @return The JapsonClient for chaining.
-	 */
-	public JapsonClient setExpiryMinutes(long expiry) {
-		this.EXPIRY = expiry;
-		return this;
 	}
 
 	/**

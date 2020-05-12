@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -22,34 +21,35 @@ import com.sitrica.japson.shared.Handler;
 
 public class Connections extends Handler {
 
+	private final LoadingCache<InetSocketAddress, JapsonConnection> disconnected;
 	private final List<JapsonConnection> connections = new ArrayList<>();
 	private final Set<Listener> listeners = new HashSet<>(); 
-	private final LoadingCache<InetSocketAddress, JapsonConnection> disconnected = CacheBuilder.newBuilder()
-			.expireAfterWrite(10, TimeUnit.MINUTES)
-			.maximumSize(1000)
-			.removalListener(new RemovalListener<InetSocketAddress, JapsonConnection>() {
-				@Override
-				public void onRemoval(RemovalNotification<InetSocketAddress, JapsonConnection> notification) {
-					JapsonConnection connection = notification.getValue();
-					// Connection was reacquired.
-					if (notification.getCause() == RemovalCause.EXPLICIT)
-						return;
-					listeners.forEach(listener -> listener.onForget(connection));
-				}
-			}).build(new CacheLoader<InetSocketAddress, JapsonConnection>() {
-				@Override
-				public JapsonConnection load(InetSocketAddress address) throws Exception {
-					return getConnection(address.getAddress(), address.getPort())
-							.orElseGet(() -> {
-								JapsonConnection created = new JapsonConnection(address.getAddress(), address.getPort(), UUID.randomUUID() + "");
-								connections.add(created);
-								return created;
-							});
-				}
-			});
 
 	public Connections(JapsonServer japson) {
 		super((byte) 0x00);
+		disconnected = CacheBuilder.newBuilder()
+				.expireAfterWrite(japson.getExpiry(), TimeUnit.MINUTES)
+				.maximumSize(1000)
+				.removalListener(new RemovalListener<InetSocketAddress, JapsonConnection>() {
+					@Override
+					public void onRemoval(RemovalNotification<InetSocketAddress, JapsonConnection> notification) {
+						JapsonConnection connection = notification.getValue();
+						// Connection was reacquired.
+						if (notification.getCause() == RemovalCause.EXPLICIT)
+							return;
+						listeners.forEach(listener -> listener.onForget(connection));
+					}
+				}).build(new CacheLoader<InetSocketAddress, JapsonConnection>() {
+					@Override
+					public JapsonConnection load(InetSocketAddress address) throws Exception {
+						return getConnection(address.getAddress(), address.getPort())
+								.orElseGet(() -> {
+									JapsonConnection created = new JapsonConnection(address.getAddress(), address.getPort());
+									connections.add(created);
+									return created;
+								});
+					}
+				});
 		listeners.addAll(japson.getListeners());
 		Executors.newSingleThreadScheduledExecutor().schedule(() -> {
 			for (JapsonConnection connection : connections) {
@@ -69,7 +69,7 @@ public class Connections extends Handler {
 	public JapsonConnection addConnection(InetAddress address, int port, String identification) {
 		return getConnection(address, port)
 				.orElseGet(() -> {
-					JapsonConnection connection = new JapsonConnection(address, port, identification);
+					JapsonConnection connection = new JapsonConnection(address, port);
 					listeners.forEach(listener -> listener.onAcquiredCommunication(connection));
 					connections.add(connection);
 					return connection;
@@ -107,19 +107,13 @@ public class Connections extends Handler {
 	public class JapsonConnection {
 
 		private long updated = System.currentTimeMillis();
-		private final String identification;
 		private final InetAddress address;
 		private final int port;
 		private int fails = 0;
 
-		public JapsonConnection(InetAddress address, int port, String identification) {
-			this.identification = identification;
+		public JapsonConnection(InetAddress address, int port) {
 			this.address = address;
 			this.port = port;
-		}
-
-		public String getIdentification() {
-			return identification;
 		}
 
 		public int getUnresponsiveCount() {

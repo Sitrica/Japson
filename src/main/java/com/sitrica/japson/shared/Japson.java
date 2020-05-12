@@ -5,25 +5,14 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.google.common.flogger.FluentLogger;
-import com.sitrica.japson.server.Listener;
 
 public abstract class Japson {
 
 	protected static final FluentLogger logger = FluentLogger.forEnclosingClass();
-	protected final Set<Listener> listeners = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
 	protected final Set<Packet> packets = new HashSet<>();
 
 	protected boolean debug;
-
-	public Japson registerListeners(Listener... listeners) {
-		this.listeners.addAll(Sets.newHashSet(listeners));
-		return this;
-	}
-
-	public Japson registerListener(Listener listener) {
-		return registerListeners(listener);
-	}
 
 	public Japson registerHandlers(Handler... handlers) {
 		Sets.newHashSet(handlers).stream()
@@ -37,10 +26,6 @@ public abstract class Japson {
 				.filter(packet -> !this.packets.stream().anyMatch(existing -> existing.getID() == packet.getID()))
 				.forEach(packet -> this.packets.add(packet));
 		return this;
-	}
-
-	public Set<Listener> getListeners() {
-		return listeners;
 	}
 
 	public Set<Handler> getHandlers() {

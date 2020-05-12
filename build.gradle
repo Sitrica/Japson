@@ -8,7 +8,7 @@ plugins {
 }
 
 jar.archiveName = project.name + '.jar'
-version '1.0.1'
+version '1.0.4'
 
 sourceCompatibility = 1.8
 
@@ -19,6 +19,7 @@ repositories {
 dependencies {
 
 	// Google Flogger
+	shadow (group: 'com.google.flogger', name: 'flogger-system-backend', version: '0.5.1')
 	shadow (group: 'com.google.flogger', name: 'flogger', version: '0.5.1')
 
 	// Google Gson
@@ -41,11 +42,11 @@ publishing {
 		}
 	}
 	publications {
-		gpr(MavenPublication) {
+		shadow(MavenPublication) {publication ->
+			project.shadow.component(publication)
 			version = version
 			groupId = 'com.sitrica'
 			artifactId = 'japson' // Don't modify
-			from(components.java)
 		}
 	}
 }
@@ -62,7 +63,9 @@ shadowJar {
 	archiveVersion = version
 	baseName = project.name
 	classifier = ''
-	minimize()
+	minimize {
+		exclude(dependency('com.google.flogger:'))
+	}
 	dependencies {
 		exclude(dependency('org.spigotmc:'))
 		exclude(dependency('org.yaml:'))

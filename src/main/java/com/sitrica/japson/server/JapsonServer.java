@@ -37,7 +37,7 @@ public class JapsonServer extends Japson {
 		this.port = port;
 		connections = new Connections(this);
 		handlers.add(connections);
-		executor.submit(new SocketHandler(this, socket));
+		executor.execute(new SocketHandler(this, socket));
 	}
 
 	public JapsonServer setDisconnectAttempts(long disconnect) {

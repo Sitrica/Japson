@@ -8,7 +8,7 @@ plugins {
 }
 
 jar.archiveName = project.name + '.jar'
-version '1.0.4'
+version '1.0.5'
 
 sourceCompatibility = 1.8
 
@@ -63,6 +63,7 @@ shadowJar {
 	archiveVersion = version
 	baseName = project.name
 	classifier = ''
+	relocate 'com.google.gson', 'com.sitrica.japson.gson'
 	minimize {
 		exclude(dependency('com.google.flogger:'))
 	}

@@ -8,7 +8,8 @@ plugins {
 }
 
 jar.archiveName = project.name + '.jar'
-version '1.0.5'
+// Add SNAPSHOT to make this publish as a beta.
+version '1.0.5.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
@@ -46,7 +47,9 @@ publishing {
 			project.shadow.component(publication)
 			version = version
 			groupId = 'com.sitrica'
-			artifactId = 'japson' // Don't modify
+			def releases = 'japson' // Don't modify
+            def snapshots = 'japson-beta' // Don't modify
+			artifactId = version.endsWith('SNAPSHOT') ? snapshots : snapshots
 		}
 	}
 }

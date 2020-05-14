@@ -11,9 +11,11 @@ import com.google.common.io.ByteStreams;
 public class ReceiverFuture extends CompletableFuture<ByteArrayDataInput> {
 
 	private final DatagramSocket socket;
+	private final Japson japson;
 
-	public ReceiverFuture(DatagramSocket socket) {
+	public ReceiverFuture(Japson japson, DatagramSocket socket) {
 		this.socket = socket;
+		this.japson = japson;
 	}
 
 	public CompletableFuture<ByteArrayDataInput> create(DatagramPacket packet) {
@@ -24,6 +26,8 @@ public class ReceiverFuture extends CompletableFuture<ByteArrayDataInput> {
 					socket.receive(packet);
 					byte[] data = packet.getData();
 					if (data == null || data.length == 0)
+						continue;
+					if (!japson.isAllowed(packet.getAddress()))
 						continue;
 					return ByteStreams.newDataInput(data);
 				} catch (IOException e) {}

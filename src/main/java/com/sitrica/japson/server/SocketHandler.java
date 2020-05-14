@@ -45,7 +45,7 @@ public class SocketHandler implements Runnable {
 			try {
 				byte[] buf = new byte[UDP_VALID_PACKET_SIZE];
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
-				ByteArrayDataInput input = new ReceiverFuture(socket)
+				ByteArrayDataInput input = new ReceiverFuture(japson, socket)
 						.create(packet)
 						.get();
 				byte id = input.readByte();

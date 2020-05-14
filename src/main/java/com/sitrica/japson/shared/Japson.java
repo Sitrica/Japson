@@ -1,5 +1,6 @@
 package com.sitrica.japson.shared;
 
+import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import com.google.common.flogger.FluentLogger;
 public abstract class Japson {
 
 	protected static final FluentLogger logger = FluentLogger.forEnclosingClass();
+	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
 	protected final Set<Packet> packets = new HashSet<>();
 
@@ -26,6 +28,16 @@ public abstract class Japson {
 				.filter(packet -> !this.packets.stream().anyMatch(existing -> existing.getID() == packet.getID()))
 				.forEach(packet -> this.packets.add(packet));
 		return this;
+	}
+
+	public Japson setAllowedAddresses(InetAddress... addesses) {
+		acceptable.clear();
+		acceptable.addAll(Sets.newHashSet(addesses));
+		return this;
+	}
+
+	public boolean isAllowed(InetAddress address) {
+		return acceptable.contains(address);
 	}
 
 	public Set<Handler> getHandlers() {

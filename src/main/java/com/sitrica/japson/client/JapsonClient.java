@@ -92,7 +92,7 @@ public class JapsonClient extends Japson {
 			byte[] buf = out.toByteArray();
 			DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
 			socket.send(packet);
-			ByteArrayDataInput input = new ReceiverFuture(socket)
+			ByteArrayDataInput input = new ReceiverFuture(this, socket)
 					.create(new DatagramPacket(buf, buf.length))
 					.get(HEARTBEAT * 5, TimeUnit.MILLISECONDS);
 			if (input == null) {

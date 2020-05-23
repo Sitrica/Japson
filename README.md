@@ -68,6 +68,5 @@ try {
 	});
 } catch (UnknownHostException | SocketException e) {
 	e.printStackTrace();
-	return;
 }
 ```

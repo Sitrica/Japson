@@ -35,3 +35,39 @@ or set the gradle property "gpr.key" to your key.
 3.) Restart system or if using Chocolatey type `refreshenv`
 
 Note: you can just directly put your token as the password, but we highly discourage that.
+
+### Usage
+
+Client side:
+```java
+try {
+	japson = new JapsonClient("example.com", 1337);
+	japson.sendPacket(new Packet((byte)0x01) {
+		@Override
+		public String toJson(Gson gson) {
+			object.addProperty("property", "example");
+			return gson.toJson(object);
+		}
+	});
+} catch (UnknownHostException e) {
+	e.printStackTrace();
+}
+```
+
+Server:
+```java
+try {
+	japson = new JapsonServer(1337);
+	japson.registerHandlers(new Handler((byte)0x01) {
+		@Override
+		public String handle(InetAddress address, int port, JsonObject object) {
+			String property = object.get("property").getAsString();
+			System.out.println(property);
+			return null; // Return a gson.toJson value from a JsonElement for a ReturnablePacket.
+		}
+	});
+} catch (UnknownHostException | SocketException e) {
+	e.printStackTrace();
+	return;
+}
+```

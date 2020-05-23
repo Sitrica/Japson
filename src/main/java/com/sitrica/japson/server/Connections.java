@@ -23,10 +23,12 @@ public class Connections extends Handler {
 
 	private final LoadingCache<InetSocketAddress, JapsonConnection> disconnected;
 	private final List<JapsonConnection> connections = new ArrayList<>();
-	private final Set<Listener> listeners = new HashSet<>(); 
+	private final Set<Listener> listeners = new HashSet<>();
+	private final JapsonServer japson;
 
 	public Connections(JapsonServer japson) {
 		super((byte) 0x00);
+		this.japson = japson;
 		disconnected = CacheBuilder.newBuilder()
 				.expireAfterWrite(japson.getExpiry(), TimeUnit.MINUTES)
 				.maximumSize(1000)
@@ -66,7 +68,7 @@ public class Connections extends Handler {
 		}, japson.getHeartbeat(), TimeUnit.MILLISECONDS);
 	}
 
-	public JapsonConnection addConnection(InetAddress address, int port, String identification) {
+	public JapsonConnection addConnection(InetAddress address, int port) {
 		return getConnection(address, port)
 				.orElseGet(() -> {
 					JapsonConnection connection = new JapsonConnection(address, port);
@@ -96,11 +98,20 @@ public class Connections extends Handler {
 
 	@Override
 	public String handle(InetAddress address, int port, JsonObject json) {
-		Optional.ofNullable(json.get("identification"))
-				.ifPresent(identification -> {
-					JapsonConnection connection = addConnection(address, port, identification.getAsString());
-					connection.update();
-				});
+		if (!japson.hasPassword()) {
+			JapsonConnection connection = addConnection(address, port);
+			connection.update();
+		} else {
+			Optional.ofNullable(json.get("password"))
+					.ifPresent(password -> {
+						if (!japson.passwordMatches(password.getAsString())) {
+							japson.getLogger().atWarning().log("A packet from %s did not match the correct password!", address.getHostName());
+							return;
+						}
+						JapsonConnection connection = addConnection(address, port);
+						connection.update();
+					});
+		}
 		return null;
 	}
 

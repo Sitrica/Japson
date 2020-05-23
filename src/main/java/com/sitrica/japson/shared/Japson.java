@@ -12,21 +12,14 @@ public abstract class Japson {
 	protected static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
-	protected final Set<Packet> packets = new HashSet<>();
 
+	protected String password;
 	protected boolean debug;
 
 	public Japson registerHandlers(Handler... handlers) {
 		Sets.newHashSet(handlers).stream()
 				.filter(handler -> !this.handlers.stream().anyMatch(existing -> existing.getID() == handler.getID()))
 				.forEach(handler -> this.handlers.add(handler));
-		return this;
-	}
-
-	public Japson registerPackets(Packet... packets) {
-		Sets.newHashSet(packets).stream()
-				.filter(packet -> !this.packets.stream().anyMatch(existing -> existing.getID() == packet.getID()))
-				.forEach(packet -> this.packets.add(packet));
 		return this;
 	}
 
@@ -40,12 +33,24 @@ public abstract class Japson {
 		return acceptable.contains(address);
 	}
 
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
 	public Set<Handler> getHandlers() {
 		return handlers;
 	}
 
 	public FluentLogger getLogger() {
 		return logger;
+	}
+
+	public boolean passwordMatches(String password) {
+		return this.password.equals(password);
+	}
+
+	public boolean hasPassword() {
+		return password != null;
 	}
 
 	public Japson enableDebug() {

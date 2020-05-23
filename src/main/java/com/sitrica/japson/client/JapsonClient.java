@@ -60,8 +60,7 @@ public class JapsonClient extends Japson {
 		this.address = address;
 		this.port = port;
 		this.gson = gson;
-		HeartbeatPacket packet = new HeartbeatPacket();
-		packets.add(packet);
+		HeartbeatPacket packet = new HeartbeatPacket(password);
 		executor.scheduleAtFixedRate(() -> sendPacket(packet), DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
 	}
 

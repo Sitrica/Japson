@@ -33,6 +33,7 @@ public class JapsonServer extends Japson {
 
 	public JapsonServer(InetAddress address, int port) throws SocketException {
 		this.socket = new DatagramSocket(port);
+		socket.connect(address, port);
 		this.address = address;
 		this.port = port;
 		connections = new Connections(this);

@@ -4,26 +4,26 @@ import java.net.InetAddress;
 
 import com.google.gson.JsonObject;
 
-public abstract class Handler {
+public abstract class Executor extends Handler {
 
-	private final byte id;
-
-	public Handler(byte id) {
-		this.id = id;
-	}
-
-	public byte getID() {
-		return id;
+	public Executor(byte id) {
+		super(id);
 	}
 
 	/**
-	 * Handle data from an incoming packet matching the id.
+	 * A void executor used from an incoming packet matching the id.
 	 * 
 	 * @param address The InetAddress of the incoming packet.
 	 * @param post The port of the address from the incoming packet.
 	 * @param json The incoming JsonObject from the packet.
 	 * @return String of Json for the packet on the client to read. Return null for no response.
 	 */
-	public abstract String handle(InetAddress address, int port, JsonObject json);
+	public abstract void execute(InetAddress address, int port, JsonObject json);
+
+	@Override
+	public String handle(InetAddress address, int port, JsonObject json) {
+		execute(address, port, json);
+		return null;
+	}
 
 }

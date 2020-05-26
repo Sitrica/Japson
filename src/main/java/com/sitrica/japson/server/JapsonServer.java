@@ -104,6 +104,10 @@ public class JapsonServer extends Japson {
 		return EXPIRY;
 	}
 
+	public void shutdown() {
+		executor.shutdown();
+	}
+
 	public int getPort() {
 		return port;
 	}

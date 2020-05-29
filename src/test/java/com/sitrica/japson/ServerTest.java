@@ -1,13 +1,14 @@
 package com.sitrica.japson;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
@@ -18,7 +19,6 @@ public class ServerTest {
 
 	static JapsonServer japson;
 
-	@Tag("gradle")
 	@Test
 	@Order(1)
 	public void setupServer() {

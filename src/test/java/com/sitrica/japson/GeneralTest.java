@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
@@ -15,7 +14,6 @@ import com.sitrica.japson.shared.ReturnablePacket;
 
 public class GeneralTest {
 
-	@Tag("gradle")
 	@Test
 	@Order(3)
 	public void packetSend() {

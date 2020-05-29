@@ -29,9 +29,7 @@ public class JapsonClient extends Japson {
 
 	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
-	private final InetAddress address;
 	private final Gson gson;
-	private final int port;
 
 	public JapsonClient(int port) throws UnknownHostException {
 		this(InetAddress.getLocalHost(), port);
@@ -57,11 +55,12 @@ public class JapsonClient extends Japson {
 	}
 
 	public JapsonClient(InetAddress address, int port, Gson gson) {
-		this.address = address;
-		this.port = port;
+		super(address, port);
 		this.gson = gson;
 		HeartbeatPacket packet = new HeartbeatPacket(password);
 		executor.scheduleAtFixedRate(() -> sendPacket(packet), DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
+		if (debug)
+			logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
 	/**

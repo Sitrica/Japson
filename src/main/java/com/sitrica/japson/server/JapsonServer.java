@@ -20,8 +20,6 @@ public class JapsonServer extends Japson {
 	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.;
 	private final Connections connections;
 	private final DatagramSocket socket;
-	private final InetAddress address;
-	private final int port;
 
 	public JapsonServer(int port) throws UnknownHostException, SocketException {
 		this(InetAddress.getLocalHost(), port);
@@ -32,13 +30,14 @@ public class JapsonServer extends Japson {
 	}
 
 	public JapsonServer(InetAddress address, int port) throws SocketException {
+		super(address, port);
 		this.socket = new DatagramSocket(port);
 		socket.connect(address, port);
-		this.address = address;
-		this.port = port;
 		connections = new Connections(this);
 		handlers.add(connections);
 		executor.execute(new SocketHandler(this, socket));
+		if (debug)
+			logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
 	public JapsonServer setDisconnectAttempts(long disconnect) {
@@ -88,10 +87,6 @@ public class JapsonServer extends Japson {
 		return listeners;
 	}
 
-	public InetAddress getAddress() {
-		return address;
-	}
-
 	public long getHeartbeat() {
 		return HEARTBEAT;
 	}
@@ -106,10 +101,6 @@ public class JapsonServer extends Japson {
 
 	public void shutdown() {
 		executor.shutdown();
-	}
-
-	public int getPort() {
-		return port;
 	}
 
 }

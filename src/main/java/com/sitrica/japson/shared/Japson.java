@@ -13,8 +13,16 @@ public abstract class Japson {
 	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
 
+	protected final InetAddress address;
+	protected final int port;
+
 	protected String password;
 	protected boolean debug;
+
+	protected Japson(InetAddress address, int port) {
+		this.address = address;
+		this.port = port;
+	}
 
 	public Japson registerHandlers(Handler... handlers) {
 		Sets.newHashSet(handlers).stream()
@@ -27,6 +35,10 @@ public abstract class Japson {
 		acceptable.clear();
 		acceptable.addAll(Sets.newHashSet(addesses));
 		return this;
+	}
+
+	public boolean passwordMatches(String password) {
+		return this.password.equals(password);
 	}
 
 	public boolean isAllowed(InetAddress address) {
@@ -45,8 +57,8 @@ public abstract class Japson {
 		return logger;
 	}
 
-	public boolean passwordMatches(String password) {
-		return this.password.equals(password);
+	public InetAddress getAddress() {
+		return address;
 	}
 
 	public boolean hasPassword() {
@@ -60,6 +72,10 @@ public abstract class Japson {
 
 	public boolean isDebug() {
 		return debug;
+	}
+
+	public int getPort() {
+		return port;
 	}
 
 }

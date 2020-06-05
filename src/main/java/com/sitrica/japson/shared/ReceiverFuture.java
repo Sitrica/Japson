@@ -20,19 +20,17 @@ public class ReceiverFuture extends CompletableFuture<ByteArrayDataInput> {
 
 	public CompletableFuture<ByteArrayDataInput> create(DatagramPacket packet) {
 		return CompletableFuture.supplyAsync(() -> {
-			String json = null;
-			while (json == null) {
-				try {
-					socket.receive(packet);
-					byte[] data = packet.getData();
-					if (data == null || data.length == 0)
-						continue;
-					if (!japson.isAllowed(packet.getAddress()))
-						continue;
-					return ByteStreams.newDataInput(data);
-				} catch (IOException e) {}
+			try {
+				socket.receive(packet);
+				byte[] data = packet.getData();
+				if (data == null || data.length == 0)
+					return null;
+				if (!japson.isAllowed(packet.getAddress()))
+					return null;
+				return ByteStreams.newDataInput(data);
+			} catch (IOException e) {
+				return null;
 			}
-			return null;
 		});
 	}
 

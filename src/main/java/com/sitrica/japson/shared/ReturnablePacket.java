@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public abstract class ReturnablePacket<T> extends Packet {
 
@@ -20,6 +21,8 @@ public abstract class ReturnablePacket<T> extends Packet {
 	public JsonElement getReturnedJsonElement() {
 		return returned;
 	}
+
+	public abstract T getObject(JsonObject object);
 
 	@SuppressWarnings("serial")
 	public Type getType() {

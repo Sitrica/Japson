@@ -48,6 +48,10 @@ public class SocketHandler implements Runnable {
 				ByteArrayDataInput input = new ReceiverFuture(japson, socket)
 						.create(packet)
 						.get();
+				if (input == null) {
+					japson.getLogger().atSevere().log("Packet received was null or an incorrect readable object for Japson");
+					return;
+				}
 				byte id = input.readByte();
 				String json = input.readUTF();
 				if (json == null) {
@@ -55,7 +59,7 @@ public class SocketHandler implements Runnable {
 					return;
 				}
 				if (japson.isDebug())
-					japson.getLogger().atInfo().log("Recieved packet with id %s and data \n%d", id, json);
+					japson.getLogger().atInfo().log("Recieved packet with id %s and data %s", id, json);
 				// Handle
 				JsonObject object = JsonParser.parseString(json).getAsJsonObject();
 				japson.getHandlers().stream()
@@ -69,7 +73,7 @@ public class SocketHandler implements Runnable {
 							out.writeUTF(data);
 							byte[] returnBuf = out.toByteArray();
 							try {
-								socket.send(new DatagramPacket(returnBuf, returnBuf.length));
+								socket.send(new DatagramPacket(returnBuf, returnBuf.length, packet.getAddress(), packet.getPort()));
 							} catch (IOException e) {
 								japson.getLogger().atSevere().withCause(e).log("Failed to send return data %s.", data);
 							}

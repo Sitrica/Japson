@@ -17,6 +17,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
 import com.sitrica.japson.client.packets.HeartbeatPacket;
 import com.sitrica.japson.shared.Japson;
 import com.sitrica.japson.shared.Packet;
@@ -43,6 +44,7 @@ public class JapsonClient extends Japson {
 		this(address, port, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
+				.setLenient()
 				.create());
 	}
 
@@ -104,8 +106,8 @@ public class JapsonClient extends Japson {
 			}
 			String json = input.readUTF();
 			if (debug)
-				logger.atInfo().log("Sent returnable packet with id %s and recieved \n%d", japsonPacket.getID(), json);
-			return gson.fromJson(json, japsonPacket.getType());
+				logger.atInfo().log("Sent returnable packet with id %s and recieved %s", japsonPacket.getID(), json);
+			return japsonPacket.getObject(JsonParser.parseString(json).getAsJsonObject());
 		} catch (SocketException socketException) {
 			logger.atSevere().withCause(socketException)
 					.atMostEvery(15, TimeUnit.SECONDS)

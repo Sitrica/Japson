@@ -8,9 +8,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.sitrica.japson.server.JapsonServer;
 import com.sitrica.japson.shared.Handler;
@@ -19,9 +17,8 @@ public class ServerTest {
 
 	static JapsonServer japson;
 
-	@Test
-	@Order(1)
-	public void setupServer() {
+	public static void setupServer() {
+		Gson gson = new Gson();
 		try {
 			japson = new JapsonServer(1337);
 			japson.enableDebug();
@@ -30,9 +27,12 @@ public class ServerTest {
 				public String handle(InetAddress address, int port, JsonObject object) {
 					assertNotNull(object);
 					assertTrue(object.has("value"));
-					assertEquals(port, 1337);
 					assertEquals(address, japson.getAddress());
-					return object.get("value").getAsString();
+					String value = object.get("value").getAsString();
+					assertEquals(value, "testing Japson");
+					JsonObject returnJson = new JsonObject();
+					returnJson.addProperty("value", value);
+					return gson.toJson(returnJson);
 				}
 			});
 		} catch (UnknownHostException | SocketException e) {

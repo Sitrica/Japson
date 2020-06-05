@@ -4,18 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.net.UnknownHostException;
 
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-
 import com.sitrica.japson.client.JapsonClient;
 
 public class ClientTest {
 
 	static JapsonClient japson;
 
-	@Test
-	@Order(2)
-	public void setupClient() {
+	public static void setupClient() {
 		try {
 			japson = new JapsonClient(1337);
 			japson.enableDebug();

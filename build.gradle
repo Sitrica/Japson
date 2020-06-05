@@ -101,9 +101,6 @@ test {
 		 logger.lifecycle("Running test: " + descriptor)
 	}
 
-	// Fail the 'test' task on the first test failure
-	failFast = true
-
 	// listen to standard out and standard error of the test JVM(s)
 	onOutput { descriptor, event ->
 		 logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )

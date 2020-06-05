@@ -42,6 +42,8 @@ public abstract class Japson {
 	}
 
 	public boolean isAllowed(InetAddress address) {
+		if (acceptable.isEmpty())
+			return true;
 		return acceptable.contains(address);
 	}
 

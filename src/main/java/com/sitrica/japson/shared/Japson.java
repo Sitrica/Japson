@@ -5,11 +5,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.google.common.flogger.FluentLogger;
 
 public abstract class Japson {
 
-	protected static FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
 
@@ -47,20 +45,12 @@ public abstract class Japson {
 		return acceptable.contains(address);
 	}
 
-	public void setLogger(FluentLogger logger) {
-		Japson.logger = logger;
-	}
-
 	public void setPassword(String password) {
 		this.password = password;
 	}
 
 	public Set<Handler> getHandlers() {
 		return handlers;
-	}
-
-	public FluentLogger getLogger() {
-		return logger;
 	}
 
 	public InetAddress getAddress() {

@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.flogger.FluentLogger;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -27,6 +28,7 @@ import com.sitrica.japson.shared.ReturnablePacket;
 public class JapsonClient extends Japson {
 
 	private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
 	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
@@ -76,6 +78,10 @@ public class JapsonClient extends Japson {
 		return this;
 	}
 
+	public FluentLogger getLogger() {
+		return logger;
+	}
+
 	public void shutdown() {
 		executor.shutdown();
 	}
@@ -92,7 +98,7 @@ public class JapsonClient extends Japson {
 			byte[] buf = out.toByteArray();
 			DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
 			socket.send(packet);
-			ByteArrayDataInput input = new ReceiverFuture(this, socket)
+			ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
 					.create(new DatagramPacket(buf, buf.length))
 					.get(HEARTBEAT * 5, TimeUnit.MILLISECONDS);
 			if (input == null) {

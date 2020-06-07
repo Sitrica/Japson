@@ -10,11 +10,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.google.common.collect.Sets;
+import com.google.common.flogger.FluentLogger;
 import com.sitrica.japson.shared.Japson;
 
 public class JapsonServer extends Japson {
 
 	private static final ExecutorService executor = Executors.newCachedThreadPool();
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<Listener> listeners = new HashSet<>();
 
 	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.;
@@ -84,6 +86,10 @@ public class JapsonServer extends Japson {
 
 	public Set<Listener> getListeners() {
 		return listeners;
+	}
+
+	public FluentLogger getLogger() {
+		return logger;
 	}
 
 	public long getHeartbeat() {

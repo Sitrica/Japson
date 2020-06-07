@@ -9,7 +9,7 @@ import com.google.common.flogger.FluentLogger;
 
 public abstract class Japson {
 
-	protected static final FluentLogger logger = FluentLogger.forEnclosingClass();
+	protected static FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
 
@@ -45,6 +45,10 @@ public abstract class Japson {
 		if (acceptable.isEmpty())
 			return true;
 		return acceptable.contains(address);
+	}
+
+	public void setLogger(FluentLogger logger) {
+		Japson.logger = logger;
 	}
 
 	public void setPassword(String password) {

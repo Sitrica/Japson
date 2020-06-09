@@ -6,13 +6,13 @@ import com.google.gson.JsonObject;
 
 public abstract class Handler {
 
-	private final byte id;
+	private final int id;
 
-	public Handler(byte id) {
+	public Handler(int id) {
 		this.id = id;
 	}
 
-	public byte getID() {
+	public int getID() {
 		return id;
 	}
 

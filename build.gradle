@@ -9,7 +9,7 @@ plugins {
 
 jar.archiveName = project.name + '.jar'
 // Add SNAPSHOT to make this publish as a beta.
-version '1.0.6.4-SNAPSHOT'
+version '1.0.6.5-SNAPSHOT'
 
 sourceCompatibility = 1.8
 

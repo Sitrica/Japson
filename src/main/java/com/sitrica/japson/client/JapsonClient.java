@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -90,60 +91,68 @@ public class JapsonClient extends Japson {
 		executor.shutdownNow();
 	}
 
-	public <T> T sendPacket(ReturnablePacket<T> japsonPacket) throws InterruptedException, ExecutionException, TimeoutException {
-		try (DatagramSocket socket = new DatagramSocket()) {
-			ByteArrayDataOutput out = ByteStreams.newDataOutput();
-			out.write(japsonPacket.getID());
-			out.writeUTF(japsonPacket.toJson(gson));
-			byte[] buf = out.toByteArray();
-			DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
-			socket.send(packet);
-			ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
-					.create(new DatagramPacket(buf, buf.length))
-					.get(HEARTBEAT * 5, TimeUnit.MILLISECONDS);
-			if (input == null) {
-				logger.atSevere().log("Packet with id %s returned null or an incorrect readable object for Japson", japsonPacket.getID());
-				return null;
+	public <T> T sendPacket(ReturnablePacket<T> japsonPacket) throws TimeoutException, InterruptedException, ExecutionException {
+		return CompletableFuture.supplyAsync(() -> {
+			try (DatagramSocket socket = new DatagramSocket()) {
+				ByteArrayDataOutput out = ByteStreams.newDataOutput();
+				out.writeInt(japsonPacket.getID());
+				out.writeUTF(japsonPacket.toJson(gson));
+				byte[] buf = out.toByteArray();
+				DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+				socket.send(packet);
+				ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
+						.create(new DatagramPacket(buf, buf.length))
+						.get();
+				if (input == null) {
+					logger.atSevere().log("Packet with id %s returned null or an incorrect readable object for Japson", japsonPacket.getID());
+					return null;
+				}
+				int id = input.readInt();
+				if (id != japsonPacket.getID()) {
+					logger.atSevere().log("Sent returnable packet with id %s, but did not get correct packet id returned", japsonPacket.getID());
+					return null;
+				}
+				String json = input.readUTF();
+				if (debug)
+					logger.atInfo().log("Sent returnable packet with id %s and recieved %s", japsonPacket.getID(), json);
+				return japsonPacket.getObject(JsonParser.parseString(json).getAsJsonObject());
+			} catch (SocketException socketException) {
+				logger.atSevere().withCause(socketException)
+						.atMostEvery(15, TimeUnit.SECONDS)
+						.log("Socket error: " + socketException.getMessage());
+			} catch (IOException exception) {
+				logger.atSevere().withCause(exception)
+						.atMostEvery(15, TimeUnit.SECONDS)
+						.log("IO error: " + exception.getMessage());
+			} catch (InterruptedException | ExecutionException exception) {
+				logger.atSevere().withCause(exception)
+				.atMostEvery(15, TimeUnit.SECONDS)
+				.log("Timeout: " + exception.getMessage());
 			}
-			byte id = input.readByte();
-			if (id != japsonPacket.getID()) {
-				logger.atSevere().log("Sent returnable packet with id %s, but did not get correct packet id returned", japsonPacket.getID());
-				return null;
-			}
-			String json = input.readUTF();
-			if (debug)
-				logger.atInfo().log("Sent returnable packet with id %s and recieved %s", japsonPacket.getID(), json);
-			return japsonPacket.getObject(JsonParser.parseString(json).getAsJsonObject());
-		} catch (SocketException socketException) {
-			logger.atSevere().withCause(socketException)
-					.atMostEvery(15, TimeUnit.SECONDS)
-					.log("Socket error: " + socketException.getMessage());
-		} catch (IOException exception) {
-			logger.atSevere().withCause(exception)
-					.atMostEvery(15, TimeUnit.SECONDS)
-					.log("IO error: " + exception.getMessage());
-		}
-		return null;
+			return null;
+		}).get(HEARTBEAT * 5, TimeUnit.SECONDS);
 	}
 
 	public void sendPacket(Packet japsonPacket) {
-		try (DatagramSocket socket = new DatagramSocket()) {
-			ByteArrayDataOutput out = ByteStreams.newDataOutput();
-			out.write(japsonPacket.getID());
-			out.writeUTF(japsonPacket.toJson(gson));
-			byte[] buf = out.toByteArray();
-			socket.send(new DatagramPacket(buf, buf.length, address, port));
-			if (debug)
-				logger.atInfo().log("Sent non-returnable packet with id %s", japsonPacket.getID());
-		} catch (SocketException socketException) {
-			logger.atSevere().withCause(socketException)
-					.atMostEvery(15, TimeUnit.SECONDS)
-					.log("Socket error: " + socketException.getMessage());
-		} catch (IOException exception) {
-			logger.atSevere().withCause(exception)
-					.atMostEvery(15, TimeUnit.SECONDS)
-					.log("IO error: " + exception.getMessage());
-		}
+		CompletableFuture.runAsync(() -> {
+			try (DatagramSocket socket = new DatagramSocket()) {
+				ByteArrayDataOutput out = ByteStreams.newDataOutput();
+				out.writeInt(japsonPacket.getID());
+				out.writeUTF(japsonPacket.toJson(gson));
+				byte[] buf = out.toByteArray();
+				socket.send(new DatagramPacket(buf, buf.length, address, port));
+				if (debug)
+					logger.atInfo().log("Sent non-returnable packet with id %s", japsonPacket.getID());
+			} catch (SocketException socketException) {
+				logger.atSevere().withCause(socketException)
+						.atMostEvery(15, TimeUnit.SECONDS)
+						.log("Socket error: " + socketException.getMessage());
+			} catch (IOException exception) {
+				logger.atSevere().withCause(exception)
+						.atMostEvery(15, TimeUnit.SECONDS)
+						.log("IO error: " + exception.getMessage());
+			}
+		});
 	}
 
 }

@@ -8,7 +8,7 @@ public class HeartbeatPacket extends Packet {
 	private final String password;
 
 	public HeartbeatPacket(String password) {
-		super((byte)0x00);
+		super(0x00);
 		this.password = password;
 	}
 

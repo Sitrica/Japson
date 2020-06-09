@@ -52,7 +52,7 @@ public class SocketHandler implements Runnable {
 					japson.getLogger().atSevere().log("Packet received was null or an incorrect readable object for Japson");
 					return;
 				}
-				byte id = input.readByte();
+				int id = input.readInt();
 				String json = input.readUTF();
 				if (json == null) {
 					japson.getLogger().atSevere().log("Recieved packet with id %s and the json was null.", id);
@@ -69,7 +69,7 @@ public class SocketHandler implements Runnable {
 						.findFirst()
 						.ifPresent(data -> {
 							ByteArrayDataOutput out = ByteStreams.newDataOutput();
-							out.write(id);
+							out.writeInt(id);
 							out.writeUTF(data);
 							byte[] returnBuf = out.toByteArray();
 							try {

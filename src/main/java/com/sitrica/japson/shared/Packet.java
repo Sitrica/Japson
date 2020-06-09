@@ -6,13 +6,13 @@ import com.google.gson.JsonObject;
 public abstract class Packet {
 
 	protected static final JsonObject object = new JsonObject();
-	private final byte id;
+	private final int id;
 
-	public Packet(byte id) {
+	public Packet(int id) {
 		this.id = id;
 	}
 
-	public byte getID() {
+	public int getID() {
 		return id;
 	}
 

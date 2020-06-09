@@ -36,7 +36,7 @@ public class GeneralTest {
 		String value = "testing Japson";
 		String returned = null;
 		try {
-			returned = ClientTest.japson.sendPacket(new ReturnablePacket<String>((byte) 0x01) {
+			returned = ClientTest.japson.sendPacket(new ReturnablePacket<String>(0x01) {
 				@Override
 				public String toJson(Gson gson) {
 					object.addProperty("value", value);

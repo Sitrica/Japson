@@ -10,7 +10,7 @@ public abstract class ReturnablePacket<T> extends Packet {
 
 	private JsonElement returned;
 
-	public ReturnablePacket(byte id) {
+	public ReturnablePacket(int id) {
 		super(id);
 	}
 

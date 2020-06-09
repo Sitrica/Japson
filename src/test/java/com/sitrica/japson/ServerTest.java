@@ -22,7 +22,7 @@ public class ServerTest {
 		try {
 			japson = new JapsonServer(1337);
 			japson.enableDebug();
-			japson.registerHandlers(new Handler((byte)0x01) {
+			japson.registerHandlers(new Handler(0x01) {
 				@Override
 				public String handle(InetAddress address, int port, JsonObject object) {
 					assertNotNull(object);

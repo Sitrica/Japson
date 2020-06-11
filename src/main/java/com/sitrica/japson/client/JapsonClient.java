@@ -100,6 +100,8 @@ public class JapsonClient extends Japson {
 				byte[] buf = out.toByteArray();
 				DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
 				socket.send(packet);
+				// Reset the byte buffer
+				buf = new byte[PACKET_SIZE];
 				ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
 						.create(new DatagramPacket(buf, buf.length))
 						.get();
@@ -126,8 +128,8 @@ public class JapsonClient extends Japson {
 						.log("IO error: " + exception.getMessage());
 			} catch (InterruptedException | ExecutionException exception) {
 				logger.atSevere().withCause(exception)
-				.atMostEvery(15, TimeUnit.SECONDS)
-				.log("Timeout: " + exception.getMessage());
+						.atMostEvery(15, TimeUnit.SECONDS)
+						.log("Timeout: " + exception.getMessage());
 			}
 			return null;
 		}).get(HEARTBEAT * 5, TimeUnit.SECONDS);

@@ -17,14 +17,15 @@ import com.sitrica.japson.shared.ReceiverFuture;
 public class SocketHandler implements Runnable {
 
 	private static final ExecutorService executor = Executors.newSingleThreadExecutor();
-	private static final int UDP_VALID_PACKET_SIZE  = 1024;
 
 	private final DatagramSocket socket;
 	private final JapsonServer japson;
+	private final int packetSize;
 
 	private boolean running = true;
 
-	public SocketHandler(JapsonServer japson, DatagramSocket socket) {
+	public SocketHandler(int packetSize, JapsonServer japson, DatagramSocket socket) {
+		this.packetSize = packetSize;
 		this.japson = japson;
 		this.socket = socket;
 	}
@@ -43,7 +44,7 @@ public class SocketHandler implements Runnable {
 	public void run() {
 		while (running) {
 			try {
-				byte[] buf = new byte[UDP_VALID_PACKET_SIZE];
+				byte[] buf = new byte[packetSize];
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
 				ByteArrayDataInput input = new ReceiverFuture(japson.getLogger(), japson, socket)
 						.create(packet)

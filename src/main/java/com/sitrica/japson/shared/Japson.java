@@ -14,6 +14,7 @@ public abstract class Japson {
 	protected final InetAddress address;
 	protected final int port;
 
+	protected int PACKET_SIZE = 1024; //UDP standard
 	protected String password;
 	protected boolean debug;
 
@@ -43,6 +44,10 @@ public abstract class Japson {
 		if (acceptable.isEmpty())
 			return true;
 		return acceptable.contains(address);
+	}
+
+	public void setPacketBufferSize(int buffer) {
+		this.PACKET_SIZE = buffer;
 	}
 
 	public void setPassword(String password) {

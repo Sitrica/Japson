@@ -24,8 +24,7 @@ public class ReceiverFuture extends CompletableFuture<ByteArrayDataInput> {
 
 	public CompletableFuture<ByteArrayDataInput> create(DatagramPacket packet) {
 		return CompletableFuture.supplyAsync(() -> {
-			ByteArrayDataInput input = null;
-			while (input == null) {
+			while (true) {
 				try {
 					socket.receive(packet);
 					byte[] data = packet.getData();
@@ -40,11 +39,9 @@ public class ReceiverFuture extends CompletableFuture<ByteArrayDataInput> {
 								.log("Recieved a packet from %s but it was not on the address whitelist.", packet.getAddress().getHostAddress());
 						continue;
 					}
-					input = ByteStreams.newDataInput(data);
-					return input;
+					return ByteStreams.newDataInput(data);
 				} catch (IOException e) {}
 			}
-			return null;
 		});
 	}
 

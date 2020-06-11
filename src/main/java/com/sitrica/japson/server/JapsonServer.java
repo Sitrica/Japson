@@ -21,7 +21,7 @@ public class JapsonServer extends Japson {
 	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<Listener> listeners = new HashSet<>();
 
-	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.;
+	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.
 	private final Connections connections;
 	private final DatagramSocket socket;
 
@@ -57,7 +57,7 @@ public class JapsonServer extends Japson {
 		this.socket = new DatagramSocket(port);
 		connections = new Connections(this);
 		handlers.add(connections);
-		executor.execute(new SocketHandler(this, socket));
+		executor.execute(new SocketHandler(PACKET_SIZE, this, socket));
 		if (debug)
 			logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}

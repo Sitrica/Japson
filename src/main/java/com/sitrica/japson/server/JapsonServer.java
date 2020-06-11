@@ -10,18 +10,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.google.common.collect.Sets;
+import com.google.common.flogger.FluentLogger;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sitrica.japson.shared.Japson;
 
 public class JapsonServer extends Japson {
 
 	private static final ExecutorService executor = Executors.newCachedThreadPool();
+	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<Listener> listeners = new HashSet<>();
 
 	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.;
 	private final Connections connections;
 	private final DatagramSocket socket;
-	private final InetAddress address;
-	private final int port;
+
+	private final Gson gson;
 
 	public JapsonServer(int port) throws UnknownHostException, SocketException {
 		this(InetAddress.getLocalHost(), port);
@@ -32,13 +36,30 @@ public class JapsonServer extends Japson {
 	}
 
 	public JapsonServer(InetAddress address, int port) throws SocketException {
+		this(address, port, new GsonBuilder()
+				.enableComplexMapKeySerialization()
+				.serializeNulls()
+				.setLenient()
+				.create());
+	}
+
+	public JapsonServer(int port, Gson gson) throws UnknownHostException, SocketException {
+		this(InetAddress.getLocalHost(), port, gson);
+	}
+
+	public JapsonServer(String host, int port, Gson gson) throws UnknownHostException, SocketException {
+		this(InetAddress.getByName(host), port, gson);
+	}
+
+	public JapsonServer(InetAddress address, int port, Gson gson) throws SocketException {
+		super(address, port);
+		this.gson = gson;
 		this.socket = new DatagramSocket(port);
-		socket.connect(address, port);
-		this.address = address;
-		this.port = port;
 		connections = new Connections(this);
 		handlers.add(connections);
 		executor.execute(new SocketHandler(this, socket));
+		if (debug)
+			logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
 	public JapsonServer setDisconnectAttempts(long disconnect) {
@@ -88,8 +109,8 @@ public class JapsonServer extends Japson {
 		return listeners;
 	}
 
-	public InetAddress getAddress() {
-		return address;
+	public FluentLogger getLogger() {
+		return logger;
 	}
 
 	public long getHeartbeat() {
@@ -104,8 +125,12 @@ public class JapsonServer extends Japson {
 		return EXPIRY;
 	}
 
-	public int getPort() {
-		return port;
+	public void shutdown() {
+		executor.shutdown();
+	}
+
+	public Gson getGson() {
+		return gson;
 	}
 
 }

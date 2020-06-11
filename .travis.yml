@@ -1,4 +1,5 @@
 language: java
 cache:
   directories:
-    - $HOME/.gradle 
+    - $HOME/.gradle
+script: "./gradlew clean test -i"

@@ -6,22 +6,24 @@ import com.google.gson.JsonObject;
 
 public abstract class Handler {
 
-	private final byte id;
+	private final int id;
 
-	public Handler(byte id) {
+	public Handler(int id) {
 		this.id = id;
 	}
 
-	public byte getID() {
+	public int getID() {
 		return id;
 	}
 
 	/**
 	 * Handle data from an incoming packet matching the id.
 	 * 
+	 * @param address The InetAddress of the incoming packet.
+	 * @param post The port of the address from the incoming packet.
 	 * @param json The incoming JsonObject from the packet.
-	 * @return String of Json for the packet on the client to read. Return null for no response.
+	 * @return JsonObject of Json for the packet on the client to read. Return null for no response.
 	 */
-	public abstract String handle(InetAddress address, int port, JsonObject json);
+	public abstract JsonObject handle(InetAddress address, int port, JsonObject json);
 
 }

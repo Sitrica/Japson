@@ -17,9 +17,9 @@ import com.google.common.cache.RemovalCause;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.gson.JsonObject;
-import com.sitrica.japson.shared.Handler;
+import com.sitrica.japson.shared.Executor;
 
-public class Connections extends Handler {
+public class Connections extends Executor {
 
 	private final LoadingCache<InetSocketAddress, JapsonConnection> disconnected;
 	private final List<JapsonConnection> connections = new ArrayList<>();
@@ -97,7 +97,7 @@ public class Connections extends Handler {
 	}
 
 	@Override
-	public String handle(InetAddress address, int port, JsonObject json) {
+	public void execute(InetAddress address, int port, JsonObject json) {
 		if (!japson.hasPassword()) {
 			JapsonConnection connection = addConnection(address, port);
 			connection.update();
@@ -112,7 +112,6 @@ public class Connections extends Handler {
 						connection.update();
 					});
 		}
-		return null;
 	}
 
 	public class JapsonConnection {

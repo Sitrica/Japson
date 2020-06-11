@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.sitrica.japson.shared.Packet;
 import com.sitrica.japson.shared.ReturnablePacket;
@@ -40,10 +39,10 @@ public class GeneralTest {
 		try {
 			returned = ClientTest.japson.sendPacket(new ReturnablePacket<String>(0x01) {
 				@Override
-				public String toJson(Gson gson) {
+				public JsonObject toJson() {
 					JsonObject object = new JsonObject();
 					object.addProperty("value", value);
-					return gson.toJson(object);
+					return object;
 				}
 				@Override
 				public String getObject(JsonObject object) {
@@ -52,10 +51,10 @@ public class GeneralTest {
 			});
 			second = ClientTest.japson.sendPacket(new ReturnablePacket<String>(0x02) {
 				@Override
-				public String toJson(Gson gson) {
+				public JsonObject toJson() {
 					JsonObject object = new JsonObject();
 					object.addProperty("value2", value2);
-					return gson.toJson(object);
+					return object;
 				}
 				@Override
 				public String getObject(JsonObject object) {
@@ -65,10 +64,10 @@ public class GeneralTest {
 			});
 			ClientTest.japson.sendPacket(new Packet(0x03) {
 				@Override
-				public String toJson(Gson gson) {
+				public JsonObject toJson() {
 					JsonObject object = new JsonObject();
 					object.addProperty("test", "test");
-					return gson.toJson(object);
+					return object;
 				}
 			});
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {

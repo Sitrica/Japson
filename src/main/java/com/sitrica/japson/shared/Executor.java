@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 
 public abstract class Executor extends Handler {
 
-	public Executor(byte id) {
+	public Executor(int id) {
 		super(id);
 	}
 
@@ -21,7 +21,7 @@ public abstract class Executor extends Handler {
 	public abstract void execute(InetAddress address, int port, JsonObject json);
 
 	@Override
-	public String handle(InetAddress address, int port, JsonObject json) {
+	public JsonObject handle(InetAddress address, int port, JsonObject json) {
 		execute(address, port, json);
 		return null;
 	}

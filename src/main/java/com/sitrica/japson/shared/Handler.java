@@ -22,8 +22,8 @@ public abstract class Handler {
 	 * @param address The InetAddress of the incoming packet.
 	 * @param post The port of the address from the incoming packet.
 	 * @param json The incoming JsonObject from the packet.
-	 * @return String of Json for the packet on the client to read. Return null for no response.
+	 * @return JsonObject of Json for the packet on the client to read. Return null for no response.
 	 */
-	public abstract String handle(InetAddress address, int port, JsonObject json);
+	public abstract JsonObject handle(InetAddress address, int port, JsonObject json);
 
 }

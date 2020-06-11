@@ -1,6 +1,6 @@
 package com.sitrica.japson.shared;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 public abstract class Packet {
 
@@ -14,6 +14,6 @@ public abstract class Packet {
 		return id;
 	}
 
-	public abstract String toJson(Gson gson);
+	public abstract JsonObject toJson();
 
 }

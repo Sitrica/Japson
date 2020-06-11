@@ -11,6 +11,8 @@ import java.util.concurrent.Executors;
 
 import com.google.common.collect.Sets;
 import com.google.common.flogger.FluentLogger;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sitrica.japson.shared.Japson;
 
 public class JapsonServer extends Japson {
@@ -23,6 +25,8 @@ public class JapsonServer extends Japson {
 	private final Connections connections;
 	private final DatagramSocket socket;
 
+	private final Gson gson;
+
 	public JapsonServer(int port) throws UnknownHostException, SocketException {
 		this(InetAddress.getLocalHost(), port);
 	}
@@ -32,7 +36,24 @@ public class JapsonServer extends Japson {
 	}
 
 	public JapsonServer(InetAddress address, int port) throws SocketException {
+		this(address, port, new GsonBuilder()
+				.enableComplexMapKeySerialization()
+				.serializeNulls()
+				.setLenient()
+				.create());
+	}
+
+	public JapsonServer(int port, Gson gson) throws UnknownHostException, SocketException {
+		this(InetAddress.getLocalHost(), port, gson);
+	}
+
+	public JapsonServer(String host, int port, Gson gson) throws UnknownHostException, SocketException {
+		this(InetAddress.getByName(host), port, gson);
+	}
+
+	public JapsonServer(InetAddress address, int port, Gson gson) throws SocketException {
 		super(address, port);
+		this.gson = gson;
 		this.socket = new DatagramSocket(port);
 		connections = new Connections(this);
 		handlers.add(connections);
@@ -106,6 +127,10 @@ public class JapsonServer extends Japson {
 
 	public void shutdown() {
 		executor.shutdown();
+	}
+
+	public Gson getGson() {
+		return gson;
 	}
 
 }

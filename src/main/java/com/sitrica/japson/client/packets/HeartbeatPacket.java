@@ -1,6 +1,5 @@
 package com.sitrica.japson.client.packets;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.sitrica.japson.shared.Packet;
 
@@ -14,11 +13,11 @@ public class HeartbeatPacket extends Packet {
 	}
 
 	@Override
-	public String toJson(Gson gson) {
+	public JsonObject toJson() {
 		JsonObject object = new JsonObject();
 		if (password != null)
 			object.addProperty("password", password);
-		return gson.toJson(object);
+		return object;
 	}
 
 }

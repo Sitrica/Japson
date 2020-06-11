@@ -96,7 +96,7 @@ public class JapsonClient extends Japson {
 			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
-				out.writeUTF(japsonPacket.toJson(gson));
+				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
 				DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
 				socket.send(packet);
@@ -138,7 +138,7 @@ public class JapsonClient extends Japson {
 			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
-				out.writeUTF(japsonPacket.toJson(gson));
+				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
 				if (debug)

@@ -53,29 +53,32 @@ public class SocketHandler implements Runnable {
 					return;
 				}
 				int id = input.readInt();
-				String json = input.readUTF();
-				if (json == null) {
+				String data = input.readUTF();
+				if (data == null) {
 					japson.getLogger().atSevere().log("Recieved packet with id %s and the json was null.", id);
 					return;
 				}
 				if (japson.isDebug())
-					japson.getLogger().atInfo().log("Recieved packet with id %s and data %s", id, json);
+					japson.getLogger().atInfo().log("Recieved packet with id %s and data %s", id, data);
 				// Handle
-				JsonObject object = JsonParser.parseString(json).getAsJsonObject();
+				JsonObject object = JsonParser.parseString(data).getAsJsonObject();
 				japson.getHandlers().stream()
 						.filter(handler -> handler.getID() == id)
 						.map(handler -> handler.handle(packet.getAddress(), packet.getPort(), object))
-						.filter(data -> data != null)
+						.filter(jsonObject -> jsonObject != null)
 						.findFirst()
-						.ifPresent(data -> {
+						.ifPresent(jsonObject -> {
 							ByteArrayDataOutput out = ByteStreams.newDataOutput();
+							String json = japson.getGson().toJson(jsonObject);
 							out.writeInt(id);
-							out.writeUTF(data);
+							out.writeUTF(json);
 							byte[] returnBuf = out.toByteArray();
 							try {
 								socket.send(new DatagramPacket(returnBuf, returnBuf.length, packet.getAddress(), packet.getPort()));
+								if (japson.isDebug())
+									japson.getLogger().atInfo().log("Returning data %s as packet id %s", json, id);
 							} catch (IOException e) {
-								japson.getLogger().atSevere().withCause(e).log("Failed to send return data %s.", data);
+								japson.getLogger().atSevere().withCause(e).log("Failed to send return data %s.", json);
 							}
 						});
 			} catch (InterruptedException | ExecutionException e) {

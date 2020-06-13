@@ -99,7 +99,6 @@ public class JapsonClient extends Japson {
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
 				DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
-				socket.setSoTimeout(5000);
 				socket.send(packet);
 				// Reset the byte buffer
 				buf = new byte[PACKET_SIZE];
@@ -133,7 +132,7 @@ public class JapsonClient extends Japson {
 						.log("Timeout: " + exception.getMessage());
 			}
 			return null;
-		}).get(HEARTBEAT * 3, TimeUnit.SECONDS);
+		}).get(HEARTBEAT * 3, TimeUnit.MILLISECONDS);
 	}
 
 	public void sendPacket(Packet japsonPacket) {
@@ -143,7 +142,7 @@ public class JapsonClient extends Japson {
 				out.writeInt(japsonPacket.getID());
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
-				socket.setSoTimeout(5000);
+				socket.setSoTimeout((int)(HEARTBEAT * 3));
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
 				if (debug)
 					logger.atInfo().log("Sent non-returnable packet with id %s", japsonPacket.getID());

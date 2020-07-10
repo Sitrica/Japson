@@ -27,7 +27,7 @@ public class Connections extends Executor {
 	private final JapsonServer japson;
 
 	public Connections(JapsonServer japson) {
-		super((byte) 0x00);
+		super(0x00);
 		this.japson = japson;
 		disconnected = CacheBuilder.newBuilder()
 				.expireAfterWrite(japson.getExpiry(), TimeUnit.MINUTES)
@@ -97,7 +97,8 @@ public class Connections extends Executor {
 	}
 
 	@Override
-	public void execute(InetAddress address, int port, JsonObject json) {
+	public void execute(InetAddress address, int packetPort, JsonObject json) {
+		int port = json.get("port").getAsInt();
 		if (!japson.hasPassword()) {
 			JapsonConnection connection = addConnection(address, port);
 			connection.update();

@@ -59,7 +59,7 @@ public class SocketHandler implements Runnable {
 					japson.getLogger().atSevere().log("Recieved packet with id %s and the json was null.", id);
 					return;
 				}
-				if (japson.isDebug())
+				if (japson.isDebug() && !japson.getIgnoredPackets().contains(id))
 					japson.getLogger().atInfo().log("Recieved packet with id %s and data %s", id, data);
 				// Handle
 				JsonObject object = JsonParser.parseString(data).getAsJsonObject();

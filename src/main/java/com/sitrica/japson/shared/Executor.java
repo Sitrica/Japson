@@ -21,7 +21,7 @@ public abstract class Executor extends Handler {
 	public abstract void execute(InetAddress address, int port, JsonObject json);
 
 	@Override
-	public JsonObject handle(InetAddress address, int port, JsonObject json) {
+	public final JsonObject handle(InetAddress address, int port, JsonObject json) {
 		execute(address, port, json);
 		return null;
 	}

@@ -62,7 +62,7 @@ public class JapsonClient extends Japson {
 	public JapsonClient(InetAddress address, int port, Gson gson) {
 		super(address, port);
 		this.gson = gson;
-		HeartbeatPacket packet = new HeartbeatPacket(password);
+		HeartbeatPacket packet = new HeartbeatPacket(password, port);
 		executor.scheduleAtFixedRate(() -> sendPacket(packet), DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
 		if (debug)
 			logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
@@ -132,7 +132,7 @@ public class JapsonClient extends Japson {
 						.log("Timeout: " + exception.getMessage());
 			}
 			return null;
-		}).get(HEARTBEAT * 5, TimeUnit.SECONDS);
+		}).get(HEARTBEAT * 3, TimeUnit.MILLISECONDS);
 	}
 
 	public void sendPacket(Packet japsonPacket) {
@@ -142,6 +142,7 @@ public class JapsonClient extends Japson {
 				out.writeInt(japsonPacket.getID());
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
+				socket.setSoTimeout((int)(HEARTBEAT * 3));
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
 				if (debug)
 					logger.atInfo().log("Sent non-returnable packet with id %s", japsonPacket.getID());

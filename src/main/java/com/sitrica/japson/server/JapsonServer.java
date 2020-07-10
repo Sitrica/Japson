@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +21,7 @@ public class JapsonServer extends Japson {
 	private static final ExecutorService executor = Executors.newCachedThreadPool();
 	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<Listener> listeners = new HashSet<>();
+	private final Set<Integer> ignored = new HashSet<>();
 
 	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.
 	private final Connections connections;
@@ -76,6 +78,10 @@ public class JapsonServer extends Japson {
 		return registerListeners(listener);
 	}
 
+	public void addIgnoreDebugPackets(Integer... packets) {
+		ignored.addAll(Sets.newHashSet(packets));
+	}
+
 	/**
 	 * The amount of minutes to wait before forgetting about a connection.
 	 * 
@@ -95,6 +101,10 @@ public class JapsonServer extends Japson {
 	public JapsonServer setTimeout(long timeout) {
 		this.TIMEOUT = timeout;
 		return this;
+	}
+
+	public Set<Integer> getIgnoredPackets() {
+		return Collections.unmodifiableSet(ignored);
 	}
 
 	public long getMaxDisconnectAttempts() {

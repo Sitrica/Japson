@@ -62,7 +62,7 @@ public class JapsonClient extends Japson {
 	public JapsonClient(InetAddress address, int port, Gson gson) {
 		super(address, port);
 		this.gson = gson;
-		HeartbeatPacket packet = new HeartbeatPacket(password);
+		HeartbeatPacket packet = new HeartbeatPacket(password, port);
 		executor.scheduleAtFixedRate(() -> sendPacket(packet), DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
 		if (debug)
 			logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);

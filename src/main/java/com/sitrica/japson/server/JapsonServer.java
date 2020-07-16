@@ -82,6 +82,31 @@ public class JapsonServer extends Japson {
 		ignored.addAll(Sets.newHashSet(packets));
 	}
 
+	@Override
+	public JapsonServer setAllowedAddresses(InetAddress... addesses) {
+		acceptable.clear();
+		acceptable.addAll(Sets.newHashSet(addesses));
+		return this;
+	}
+
+	@Override
+	public JapsonServer setPacketBufferSize(int buffer) {
+		this.PACKET_SIZE = buffer;
+		return this;
+	}
+
+	@Override
+	public JapsonServer setPassword(String password) {
+		this.password = password;
+		return this;
+	}
+
+	@Override
+	public JapsonServer enableDebug() {
+		this.debug = true;
+		return this;
+	}
+
 	/**
 	 * The amount of minutes to wait before forgetting about a connection.
 	 * 

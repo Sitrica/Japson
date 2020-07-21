@@ -1,9 +1,9 @@
 package com.sitrica.japson.client.packets;
 
 import com.google.gson.JsonObject;
-import com.sitrica.japson.shared.Packet;
+import com.sitrica.japson.shared.ReturnablePacket;
 
-public class HeartbeatPacket extends Packet {
+public class HeartbeatPacket extends ReturnablePacket<Boolean> {
 
 	private final String password;
 	private final int port;
@@ -21,6 +21,11 @@ public class HeartbeatPacket extends Packet {
 			object.addProperty("password", password);
 		object.addProperty("port", port);
 		return object;
+	}
+
+	@Override
+	public Boolean getObject(JsonObject object) {
+		return object.has("success");
 	}
 
 }

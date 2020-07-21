@@ -30,7 +30,8 @@ public abstract class Japson {
 	protected final InetAddress address;
 	protected final int port;
 
-	protected int PACKET_SIZE = 1024; //UDP standard
+	protected int PACKET_SIZE = 1024; // UDP standard
+	protected int TIMEOUT = 2000; // milliseconds
 	protected String password;
 	protected boolean debug;
 
@@ -46,11 +47,21 @@ public abstract class Japson {
 		return this;
 	}
 
-	public Japson setAllowedAddresses(InetAddress... addesses) {
-		acceptable.clear();
-		acceptable.addAll(Sets.newHashSet(addesses));
-		return this;
-	}
+	public abstract Japson setAllowedAddresses(InetAddress... addesses);
+
+	public abstract Japson setPacketBufferSize(int buffer);
+
+	public abstract Japson setPassword(String password);
+
+	/**
+	 * Set the timeout in milliseconds to wait for returnable packets.
+	 * 
+	 * @param timeout The time in Milliseconds to set as the timeout.
+	 * @return Japson instance for chaining.
+	 */
+	public abstract Japson setTimeout(int timeout);
+
+	public abstract Japson enableDebug();
 
 	public boolean passwordMatches(String password) {
 		return this.password.equals(password);
@@ -60,16 +71,6 @@ public abstract class Japson {
 		if (acceptable.isEmpty())
 			return true;
 		return acceptable.contains(address);
-	}
-
-	public Japson setPacketBufferSize(int buffer) {
-		this.PACKET_SIZE = buffer;
-		return this;
-	}
-
-	public Japson setPassword(String password) {
-		this.password = password;
-		return this;
 	}
 
 	public Set<Handler> getHandlers() {
@@ -86,11 +87,6 @@ public abstract class Japson {
 
 	public boolean hasPassword() {
 		return password != null;
-	}
-
-	public Japson enableDebug() {
-		this.debug = true;
-		return this;
 	}
 
 	public boolean isDebug() {
@@ -150,7 +146,7 @@ public abstract class Japson {
 						.log("Timeout: " + exception.getMessage());
 			}
 			return null;
-		}).get(3, TimeUnit.SECONDS);
+		}).get(TIMEOUT, TimeUnit.MILLISECONDS);
 	}
 
 	public void sendPacket(InetAddress address, int port, Packet japsonPacket) {

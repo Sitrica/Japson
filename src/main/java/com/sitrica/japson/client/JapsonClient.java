@@ -22,6 +22,7 @@ public class JapsonClient extends Japson {
 
 	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
+	private boolean check, valid = true;
 	private final Gson gson;
 
 	public JapsonClient(int port) throws UnknownHostException {
@@ -52,28 +53,17 @@ public class JapsonClient extends Japson {
 		super(address, port);
 		this.gson = gson;
 		HeartbeatPacket packet = new HeartbeatPacket(password, port);
-		executor.scheduleAtFixedRate(() -> sendPacket(packet), DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
+		executor.scheduleAtFixedRate(() -> {
+			try {
+				Boolean success = sendPacket(packet);
+				if (check && success)
+					valid = true;
+			} catch (TimeoutException | InterruptedException | ExecutionException e) {
+				valid = false;
+			}
+		}, DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
 		if (debug)
 			logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
-	}
-
-	/**
-	 * The amount of milliseconds the heartbeat is set at, must match that of the JapsonClient.
-	 * 
-	 * @param heartbeat time in milliseconds.
-	 * @return The JapsonClient for chaining.
-	 */
-	public JapsonClient setHeartbeat(long heartbeat) {
-		this.HEARTBEAT = heartbeat;
-		return this;
-	}
-
-	public void shutdown() {
-		executor.shutdown();
-	}
-
-	public void kill() {
-		executor.shutdownNow();
 	}
 
 	@Override
@@ -95,13 +85,50 @@ public class JapsonClient extends Japson {
 		return this;
 	}
 
+	/**
+	 * The amount of milliseconds the heartbeat is set at, must match that of the JapsonClient.
+	 * 
+	 * @param heartbeat time in milliseconds.
+	 * @return The JapsonClient for chaining.
+	 */
+	public JapsonClient setHeartbeat(long heartbeat) {
+		this.HEARTBEAT = heartbeat;
+		return this;
+	}
+
+	/**
+	 * Will ensure that packets are only sent if heartbeats were successful.
+	 * 
+	 * @return The JapsonClient for chaining.
+	 */
+	public JapsonClient makeSureConnectionValid() {
+		this.check = true;
+		return this;
+	}
+
+	@Override
+	public JapsonClient setTimeout(int timeout) {
+		this.TIMEOUT = timeout;
+		return this;
+	}
+
 	@Override
 	public JapsonClient enableDebug() {
 		this.debug = true;
 		return this;
 	}
 
+	public void shutdown() {
+		executor.shutdown();
+	}
+
+	public void kill() {
+		executor.shutdownNow();
+	}
+
 	public <T> T sendPacket(ReturnablePacket<T> japsonPacket) throws TimeoutException, InterruptedException, ExecutionException {
+		if (!valid)
+			throw new TimeoutException("No connection to the server. Cancelling sending packet.");
 		return sendPacket(address, port, japsonPacket, gson);
 	}
 

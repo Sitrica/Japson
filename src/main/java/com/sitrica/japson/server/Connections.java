@@ -16,10 +16,11 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalCause;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sitrica.japson.shared.Executor;
+import com.sitrica.japson.shared.Handler;
 
-public class Connections extends Executor {
+public class Connections extends Handler {
 
 	private final LoadingCache<InetSocketAddress, JapsonConnection> disconnected;
 	private final List<JapsonConnection> connections = new ArrayList<>();
@@ -30,7 +31,7 @@ public class Connections extends Executor {
 		super(0x00);
 		this.japson = japson;
 		disconnected = CacheBuilder.newBuilder()
-				.expireAfterWrite(japson.getExpiry(), TimeUnit.MINUTES)
+				.expireAfterWrite(japson.getConnectionExpiry(), TimeUnit.MINUTES)
 				.maximumSize(1000)
 				.removalListener(new RemovalListener<InetSocketAddress, JapsonConnection>() {
 					@Override
@@ -59,13 +60,13 @@ public class Connections extends Executor {
 					continue;
 				listeners.forEach(listener -> listener.onUnresponsive(connection));
 				connection.unresponsive();
-				if (connection.getUnresponsiveCount() > japson.getMaxDisconnectAttempts()) {
+				if (connection.getUnresponsiveCount() > japson.getMaxReconnectAttempts()) {
 					listeners.forEach(listener -> listener.onDisconnect(connection));
 					disconnected.put(InetSocketAddress.createUnresolved(connection.getAddress().getHostName(), connection.getPort()), connection);
 				}
 			}
-			connections.removeIf(connection -> connection.getUnresponsiveCount() > japson.getMaxDisconnectAttempts());
-		}, japson.getHeartbeat(), TimeUnit.MILLISECONDS);
+			connections.removeIf(connection -> connection.getUnresponsiveCount() > japson.getMaxReconnectAttempts());
+		}, 1, TimeUnit.SECONDS);
 	}
 
 	public JapsonConnection addConnection(InetAddress address, int port) {
@@ -97,22 +98,26 @@ public class Connections extends Executor {
 	}
 
 	@Override
-	public void execute(InetAddress address, int packetPort, JsonObject json) {
+	public JsonObject handle(InetAddress address, int packetPort, JsonObject json) {
 		int port = json.get("port").getAsInt();
 		if (!japson.hasPassword()) {
 			JapsonConnection connection = addConnection(address, port);
 			connection.update();
 		} else {
-			Optional.ofNullable(json.get("password"))
-					.ifPresent(password -> {
-						if (!japson.passwordMatches(password.getAsString())) {
-							japson.getLogger().atWarning().log("A packet from %s did not match the correct password!", address.getHostName());
-							return;
-						}
-						JapsonConnection connection = addConnection(address, port);
-						connection.update();
-					});
+			Optional<JsonElement> optional = Optional.ofNullable(json.get("password"));
+			if (!optional.isPresent())
+				return null;
+			String password = optional.get().getAsString();
+			if (!japson.passwordMatches(password)) {
+				japson.getLogger().atWarning().log("A packet from %s did not match the correct password!", address.getHostName());
+				return null;
+			}
+			JapsonConnection connection = addConnection(address, port);
+			connection.update();
 		}
+		JsonObject returning = new JsonObject();
+		returning.addProperty("success", true);
+		return returning;
 	}
 
 	public class JapsonConnection {

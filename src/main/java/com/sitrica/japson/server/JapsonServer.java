@@ -23,7 +23,7 @@ public class JapsonServer extends Japson {
 	protected final Set<Listener> listeners = new HashSet<>();
 	private final Set<Integer> ignored = new HashSet<>();
 
-	private long TIMEOUT = 3000L, HEARTBEAT = 1000L, DISCONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount, and rest in milliseconds.
+	private long RECONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount.
 	private final Connections connections;
 	private final DatagramSocket socket;
 
@@ -64,8 +64,15 @@ public class JapsonServer extends Japson {
 			logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
-	public JapsonServer setDisconnectAttempts(long disconnect) {
-		this.DISCONNECT = disconnect;
+	@Override
+	public JapsonServer setAllowedAddresses(InetAddress... addesses) {
+		acceptable.clear();
+		acceptable.addAll(Sets.newHashSet(addesses));
+		return this;
+	}
+
+	public JapsonServer setMaxReconnectAttempts(long reconnect) {
+		this.RECONNECT = reconnect;
 		return this;
 	}
 
@@ -74,18 +81,18 @@ public class JapsonServer extends Japson {
 		return this;
 	}
 
-	public Japson registerListener(Listener listener) {
-		return registerListeners(listener);
-	}
-
 	public void addIgnoreDebugPackets(Integer... packets) {
 		ignored.addAll(Sets.newHashSet(packets));
 	}
 
-	@Override
-	public JapsonServer setAllowedAddresses(InetAddress... addesses) {
-		acceptable.clear();
-		acceptable.addAll(Sets.newHashSet(addesses));
+	/**
+	 * The amount of minutes to wait before forgetting about a connection.
+	 * 
+	 * @param minutes Time in minutes.
+	 * @return The JapsonServer for chaining.
+	 */
+	public JapsonServer setConnectionExpiry(long minutes) {
+		this.EXPIRY = minutes;
 		return this;
 	}
 
@@ -95,6 +102,10 @@ public class JapsonServer extends Japson {
 		return this;
 	}
 
+	public Japson registerListener(Listener listener) {
+		return registerListeners(listener);
+	}
+
 	@Override
 	public JapsonServer setPassword(String password) {
 		this.password = password;
@@ -102,28 +113,7 @@ public class JapsonServer extends Japson {
 	}
 
 	@Override
-	public JapsonServer enableDebug() {
-		this.debug = true;
-		return this;
-	}
-
-	/**
-	 * The amount of minutes to wait before forgetting about a connection.
-	 * 
-	 * @param expiry time in minutes.
-	 * @return The JapsonServer for chaining.
-	 */
-	public JapsonServer setExpiryMinutes(long expiry) {
-		this.EXPIRY = expiry;
-		return this;
-	}
-
-	public JapsonServer setHeartbeat(long heartbeat) {
-		this.HEARTBEAT = heartbeat;
-		return this;
-	}
-
-	public JapsonServer setTimeout(long timeout) {
+	public JapsonServer setTimeout(int timeout) {
 		this.TIMEOUT = timeout;
 		return this;
 	}
@@ -132,8 +122,8 @@ public class JapsonServer extends Japson {
 		return Collections.unmodifiableSet(ignored);
 	}
 
-	public long getMaxDisconnectAttempts() {
-		return DISCONNECT;
+	public long getMaxReconnectAttempts() {
+		return RECONNECT;
 	}
 
 	public Connections getConnections() {
@@ -144,20 +134,22 @@ public class JapsonServer extends Japson {
 		return listeners;
 	}
 
+	public long getConnectionExpiry() {
+		return EXPIRY;
+	}
+
+	@Override
+	public JapsonServer enableDebug() {
+		this.debug = true;
+		return this;
+	}
+
 	public FluentLogger getLogger() {
 		return logger;
 	}
 
-	public long getHeartbeat() {
-		return HEARTBEAT;
-	}
-
 	public long getTimeout() {
 		return TIMEOUT;
-	}
-
-	public long getExpiry() {
-		return EXPIRY;
 	}
 
 	public void shutdown() {

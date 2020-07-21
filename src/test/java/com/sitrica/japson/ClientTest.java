@@ -12,8 +12,10 @@ public class ClientTest {
 
 	public static void setupClient() {
 		try {
-			japson = new JapsonClient(1337);
-			japson.enableDebug();
+			japson = new JapsonClient(1337)
+					.setPassword("test-password")
+					.makeSureConnectionValid()
+					.enableDebug();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}

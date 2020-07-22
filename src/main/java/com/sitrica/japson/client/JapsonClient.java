@@ -55,7 +55,7 @@ public class JapsonClient extends Japson {
 		HeartbeatPacket packet = new HeartbeatPacket(password, port);
 		executor.scheduleAtFixedRate(() -> {
 			try {
-				Boolean success = sendPacket(packet);
+				Boolean success = sendPacket(address, port, packet, gson);
 				if (check && success)
 					valid = true;
 			} catch (TimeoutException | InterruptedException | ExecutionException e) {

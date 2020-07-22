@@ -76,7 +76,7 @@ public class JapsonServer extends Japson {
 		return this;
 	}
 
-	public Japson registerListeners(Listener... listeners) {
+	public JapsonServer registerListeners(Listener... listeners) {
 		this.listeners.addAll(Sets.newHashSet(listeners));
 		return this;
 	}

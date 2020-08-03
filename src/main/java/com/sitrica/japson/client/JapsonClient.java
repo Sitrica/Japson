@@ -18,7 +18,7 @@ import com.sitrica.japson.shared.ReturnablePacket;
 
 public class JapsonClient extends Japson {
 
-	private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
 	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
@@ -55,15 +55,14 @@ public class JapsonClient extends Japson {
 		HeartbeatPacket packet = new HeartbeatPacket(password, port);
 		executor.scheduleAtFixedRate(() -> {
 			try {
-				Boolean success = sendPacket(address, port, packet, gson);
+				Boolean success = sendPacket(packet);
 				if (check && success)
 					valid = true;
 			} catch (TimeoutException | InterruptedException | ExecutionException e) {
 				valid = false;
 			}
 		}, DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
-		if (debug)
-			logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
+		logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
 	@Override
@@ -126,14 +125,14 @@ public class JapsonClient extends Japson {
 		executor.shutdownNow();
 	}
 
-	public <T> T sendPacket(ReturnablePacket<T> japsonPacket) throws TimeoutException, InterruptedException, ExecutionException {
-		if (!valid)
+	public <T> T sendPacket(ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
+		if (check && !valid && !(packet instanceof HeartbeatPacket))
 			throw new TimeoutException("No connection to the server. Cancelling sending packet.");
-		return sendPacket(address, port, japsonPacket, gson);
+		return sendPacket(address, port, packet, gson);
 	}
 
-	public void sendPacket(Packet japsonPacket) {
-		sendPacket(address, port, japsonPacket, gson);
+	public void sendPacket(Packet packet) throws InterruptedException, ExecutionException {
+		sendPacket(address, port, packet, gson);
 	}
 
 }

@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
@@ -15,8 +13,6 @@ import com.google.gson.JsonParser;
 import com.sitrica.japson.shared.ReceiverFuture;
 
 public class SocketHandler implements Runnable {
-
-	private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private final DatagramSocket socket;
 	private final JapsonServer japson;
@@ -28,16 +24,6 @@ public class SocketHandler implements Runnable {
 		this.packetSize = packetSize;
 		this.japson = japson;
 		this.socket = socket;
-	}
-
-	void shutdown() {
-		executor.shutdown();
-		running = false;
-	}
-
-	void kill() {
-		executor.shutdownNow();
-		running = false;
 	}
 
 	@Override
@@ -56,11 +42,11 @@ public class SocketHandler implements Runnable {
 				int id = input.readInt();
 				String data = input.readUTF();
 				if (data == null) {
-					japson.getLogger().atSevere().log("Recieved packet with id %s and the json was null.", id);
+					japson.getLogger().atSevere().log("Received packet with id %s and the json was null.", id);
 					return;
 				}
-				if (japson.isDebug() && !japson.getIgnoredPackets().contains(id))
-					japson.getLogger().atInfo().log("Recieved packet with id %s and data %s", id, data);
+				if (japson.isDebug() && (japson.getIgnoredPackets().isEmpty() || !japson.getIgnoredPackets().contains(id)))
+					japson.getLogger().atInfo().log("Received packet with id %s and data %s", id, data);
 				// Handle
 				JsonObject object = JsonParser.parseString(data).getAsJsonObject();
 				japson.getHandlers().stream()

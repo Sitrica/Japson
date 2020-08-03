@@ -18,8 +18,7 @@ import com.sitrica.japson.shared.Japson;
 
 public class JapsonServer extends Japson {
 
-	private static final ExecutorService executor = Executors.newCachedThreadPool();
-	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+	private final ExecutorService executor = Executors.newCachedThreadPool();
 	protected final Set<Listener> listeners = new HashSet<>();
 	private final Set<Integer> ignored = new HashSet<>();
 
@@ -56,12 +55,12 @@ public class JapsonServer extends Japson {
 	public JapsonServer(InetAddress address, int port, Gson gson) throws SocketException {
 		super(address, port);
 		this.gson = gson;
-		this.socket = new DatagramSocket(port);
+		this.socket = new DatagramSocket(port, address);
+		socket.setSoTimeout(TIMEOUT);
 		connections = new Connections(this);
 		handlers.add(connections);
 		executor.execute(new SocketHandler(PACKET_SIZE, this, socket));
-		if (debug)
-			logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
+		logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
 	@Override
@@ -153,7 +152,17 @@ public class JapsonServer extends Japson {
 	}
 
 	public void shutdown() {
+		connections.shutdown();
+		socket.disconnect();
+		socket.close();
 		executor.shutdown();
+	}
+
+	public void kill() {
+		connections.kill();
+		socket.disconnect();
+		socket.close();
+		executor.shutdownNow();
 	}
 
 	public Gson getGson() {

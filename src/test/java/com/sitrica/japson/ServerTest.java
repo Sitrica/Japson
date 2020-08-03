@@ -60,7 +60,6 @@ public class ServerTest {
 			e.printStackTrace();
 		}
 		assertNotNull(japson);
-		System.out.println("Server started on " + japson.getAddress().getHostAddress() + ":" + japson.getPort());
 	}
 
 }

@@ -113,7 +113,6 @@ public abstract class Japson {
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
 				socket.setSoTimeout(TIMEOUT);
-				System.out.println("sending " + japsonPacket.getID());
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
 				// Reset the byte buffer
 				buf = new byte[PACKET_SIZE];

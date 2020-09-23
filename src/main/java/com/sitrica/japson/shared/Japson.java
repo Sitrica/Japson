@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.HashSet;
 import java.util.Set;
@@ -81,12 +82,24 @@ public abstract class Japson {
 		return debug;
 	}
 
+	public <T> T sendPacket(InetSocketAddress address, ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
+		return sendPacket(address.getAddress(), address.getPort(), packet, new GsonBuilder()
+				.enableComplexMapKeySerialization()
+				.serializeNulls()
+				.setLenient()
+				.create());
+	}
+
 	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
 		return sendPacket(address, port, packet, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
 				.setLenient()
 				.create());
+	}
+
+	public <T> T sendPacket(InetSocketAddress address, ReturnablePacket<T> japsonPacket, Gson gson) throws TimeoutException, InterruptedException, ExecutionException {
+		return sendPacket(address.getAddress(), address.getPort(), japsonPacket, gson);
 	}
 
 	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> japsonPacket, Gson gson) throws TimeoutException, InterruptedException, ExecutionException {
@@ -132,12 +145,24 @@ public abstract class Japson {
 		}).get(TIMEOUT, TimeUnit.MILLISECONDS);
 	}
 
+	public void sendPacket(InetSocketAddress address, Packet japsonPacket) throws InterruptedException, ExecutionException, TimeoutException {
+		sendPacket(address.getAddress(), address.getPort(), japsonPacket, new GsonBuilder()
+				.enableComplexMapKeySerialization()
+				.serializeNulls()
+				.setLenient()
+				.create());
+	}
+
 	public void sendPacket(InetAddress address, int port, Packet japsonPacket) throws InterruptedException, ExecutionException, TimeoutException {
 		sendPacket(address, port, japsonPacket, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
 				.setLenient()
 				.create());
+	}
+
+	public void sendPacket(InetSocketAddress address, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {
+		sendPacket(address.getAddress(), address.getPort(), japsonPacket, gson);
 	}
 
 	public void sendPacket(InetAddress address, int port, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {

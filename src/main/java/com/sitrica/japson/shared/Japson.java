@@ -170,12 +170,13 @@ public abstract class Japson {
 			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
-				out.writeUTF(gson.toJson(japsonPacket.toJson()));
+				String data = gson.toJson(japsonPacket.toJson());
+				out.writeUTF(data);
 				byte[] buf = out.toByteArray();
 				socket.setSoTimeout(TIMEOUT);
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
 				if (debug)
-					logger.atInfo().log("Sent non-returnable packet with id %s", japsonPacket.getID());
+					logger.atInfo().log("Sent non-returnable packet with id %s and data %s", japsonPacket.getID(), data);
 				socket.close();
 			} catch (SocketException socketException) {
 				logger.atSevere().withCause(socketException)

@@ -78,7 +78,6 @@ public class GeneralTest {
 		assertEquals(returned, value);
 		assertNotNull(second);
 		assertEquals(second, value2);
-		ServerTest.japson.shutdown();
 	}
 
 }

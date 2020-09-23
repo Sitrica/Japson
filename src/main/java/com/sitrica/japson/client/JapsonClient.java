@@ -60,6 +60,7 @@ public class JapsonClient extends Japson {
 					valid = true;
 			} catch (TimeoutException | InterruptedException | ExecutionException e) {
 				valid = false;
+				e.printStackTrace();
 			}
 		}, DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
 		logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);

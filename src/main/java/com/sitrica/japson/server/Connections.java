@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.CacheBuilder;
@@ -22,6 +23,7 @@ import com.sitrica.japson.shared.Handler;
 
 public class Connections extends Handler {
 
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private final LoadingCache<InetSocketAddress, JapsonConnection> disconnected;
 	private final List<JapsonConnection> connections = new ArrayList<>();
 	private final Set<Listener> listeners = new HashSet<>();
@@ -54,7 +56,7 @@ public class Connections extends Handler {
 					}
 				});
 		listeners.addAll(japson.getListeners());
-		Executors.newSingleThreadScheduledExecutor().schedule(() -> {
+		executor.schedule(() -> {
 			for (JapsonConnection connection : connections) {
 				if (System.currentTimeMillis() - connection.getLastUpdate() < japson.getTimeout())
 					continue;
@@ -118,6 +120,14 @@ public class Connections extends Handler {
 		JsonObject returning = new JsonObject();
 		returning.addProperty("success", true);
 		return returning;
+	}
+
+	public void shutdown() {
+		executor.shutdown();
+	}
+
+	public void kill() {
+		executor.shutdownNow();
 	}
 
 	public class JapsonConnection {

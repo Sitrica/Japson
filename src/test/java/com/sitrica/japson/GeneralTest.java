@@ -34,6 +34,7 @@ public class GeneralTest {
 	@Test
 	@Order(3)
 	public void sendPacket() {
+		assertEquals(ClientTest.japson.getAddress(), ServerTest.japson.getAddress());
 		String value = "testing Japson", value2 = "testing Japson 2";
 		String returned = null, second = null;
 		try {
@@ -77,7 +78,6 @@ public class GeneralTest {
 		assertEquals(returned, value);
 		assertNotNull(second);
 		assertEquals(second, value2);
-		ClientTest.japson.getLogger().atInfo().log("All tests were successful!");
 	}
 
 }

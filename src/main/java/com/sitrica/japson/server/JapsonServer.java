@@ -18,10 +18,13 @@ import com.sitrica.japson.shared.Japson;
 
 public class JapsonServer extends Japson {
 
-	private static final ExecutorService executor = Executors.newCachedThreadPool();
-	private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+	private final ExecutorService executor = Executors.newCachedThreadPool();
 	protected final Set<Listener> listeners = new HashSet<>();
 	private final Set<Integer> ignored = new HashSet<>();
+	private final SocketHandler handler;
+
+	protected final InetAddress address;
+	protected final int port;
 
 	private long RECONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount.
 	private final Connections connections;
@@ -54,14 +57,16 @@ public class JapsonServer extends Japson {
 	}
 
 	public JapsonServer(InetAddress address, int port, Gson gson) throws SocketException {
-		super(address, port);
+		this.address = address;
+		this.port = port;
 		this.gson = gson;
-		this.socket = new DatagramSocket(port);
+		this.socket = new DatagramSocket(port, address);
+		socket.setSoTimeout(TIMEOUT);
 		connections = new Connections(this);
 		handlers.add(connections);
-		executor.execute(new SocketHandler(PACKET_SIZE, this, socket));
-		if (debug)
-			logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
+		handler = new SocketHandler(PACKET_SIZE, this, socket);
+		executor.execute(handler);
+		logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
 	@Override
@@ -148,12 +153,32 @@ public class JapsonServer extends Japson {
 		return logger;
 	}
 
+	public InetAddress getAddress() {
+		return address;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
 	public long getTimeout() {
 		return TIMEOUT;
 	}
 
 	public void shutdown() {
+		connections.shutdown();
+		socket.disconnect();
+		socket.close();
+		handler.stop();
 		executor.shutdown();
+	}
+
+	public void kill() {
+		connections.kill();
+		socket.disconnect();
+		socket.close();
+		handler.stop();
+		executor.shutdownNow();
 	}
 
 	public Gson getGson() {

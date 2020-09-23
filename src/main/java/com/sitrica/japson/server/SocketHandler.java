@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
@@ -15,8 +13,6 @@ import com.google.gson.JsonParser;
 import com.sitrica.japson.shared.ReceiverFuture;
 
 public class SocketHandler implements Runnable {
-
-	private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private final DatagramSocket socket;
 	private final JapsonServer japson;
@@ -30,19 +26,11 @@ public class SocketHandler implements Runnable {
 		this.socket = socket;
 	}
 
-	void shutdown() {
-		executor.shutdown();
-		running = false;
-	}
-
-	void kill() {
-		executor.shutdownNow();
-		running = false;
-	}
-
 	@Override
 	public void run() {
 		while (running) {
+			if (socket.isClosed())
+				break;
 			try {
 				byte[] buf = new byte[packetSize];
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -56,11 +44,11 @@ public class SocketHandler implements Runnable {
 				int id = input.readInt();
 				String data = input.readUTF();
 				if (data == null) {
-					japson.getLogger().atSevere().log("Recieved packet with id %s and the json was null.", id);
+					japson.getLogger().atSevere().log("Received packet with id %s and the json was null.", id);
 					return;
 				}
-				if (japson.isDebug() && !japson.getIgnoredPackets().contains(id))
-					japson.getLogger().atInfo().log("Recieved packet with id %s and data %s", id, data);
+				if (japson.isDebug() && (japson.getIgnoredPackets().isEmpty() || !japson.getIgnoredPackets().contains(id)))
+					japson.getLogger().atInfo().log("Received packet with id %s and data %s", id, data);
 				// Handle
 				JsonObject object = JsonParser.parseString(data).getAsJsonObject();
 				japson.getHandlers().stream()
@@ -75,6 +63,8 @@ public class SocketHandler implements Runnable {
 							out.writeUTF(json);
 							byte[] returnBuf = out.toByteArray();
 							try {
+								if (socket.isClosed())
+									return;
 								socket.send(new DatagramPacket(returnBuf, returnBuf.length, packet.getAddress(), packet.getPort()));
 								if (japson.isDebug())
 									japson.getLogger().atInfo().log("Returning data %s as packet id %s", json, id);
@@ -86,6 +76,10 @@ public class SocketHandler implements Runnable {
 				japson.getListeners().forEach(listener -> listener.onShutdown());
 			}
 		}
+	}
+
+	public void stop() {
+		running = false;
 	}
 
 }

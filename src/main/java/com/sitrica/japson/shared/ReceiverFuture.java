@@ -25,6 +25,8 @@ public class ReceiverFuture extends CompletableFuture<ByteArrayDataInput> {
 	public CompletableFuture<ByteArrayDataInput> create(DatagramPacket packet) {
 		return CompletableFuture.supplyAsync(() -> {
 			while (true) {
+				if (socket.isClosed())
+					return null;
 				try {
 					socket.receive(packet);
 					byte[] data = packet.getData();

@@ -164,6 +164,7 @@ public class Connections extends Handler {
 
 		public void update() {
 			updated = System.currentTimeMillis();
+			listeners.forEach(listener -> listener.onHeartbeat(this));
 		}
 
 	}

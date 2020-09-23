@@ -12,6 +12,8 @@ public interface Listener {
 
 	public void onDisconnect(JapsonConnection connection);
 
+	public void onHeartbeat(JapsonConnection connection);
+
 	public void onForget(JapsonConnection connection);
 
 	public void onShutdown();

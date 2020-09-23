@@ -23,6 +23,9 @@ public class JapsonServer extends Japson {
 	private final Set<Integer> ignored = new HashSet<>();
 	private final SocketHandler handler;
 
+	protected final InetAddress address;
+	protected final int port;
+
 	private long RECONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount.
 	private final Connections connections;
 	private final DatagramSocket socket;
@@ -54,7 +57,8 @@ public class JapsonServer extends Japson {
 	}
 
 	public JapsonServer(InetAddress address, int port, Gson gson) throws SocketException {
-		super(address, port);
+		this.address = address;
+		this.port = port;
 		this.gson = gson;
 		this.socket = new DatagramSocket(port, address);
 		socket.setSoTimeout(TIMEOUT);
@@ -147,6 +151,14 @@ public class JapsonServer extends Japson {
 
 	public FluentLogger getLogger() {
 		return logger;
+	}
+
+	public InetAddress getAddress() {
+		return address;
+	}
+
+	public int getPort() {
+		return port;
 	}
 
 	public long getTimeout() {

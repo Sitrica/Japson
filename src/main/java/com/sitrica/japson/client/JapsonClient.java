@@ -22,6 +22,9 @@ public class JapsonClient extends Japson {
 
 	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
+	protected final InetAddress address;
+	protected final int port;
+
 	private boolean check, valid = true;
 	private final Gson gson;
 
@@ -50,20 +53,23 @@ public class JapsonClient extends Japson {
 	}
 
 	public JapsonClient(InetAddress address, int port, Gson gson) {
-		super(address, port);
+		this.address = address;
+		this.port = port;
 		this.gson = gson;
-		HeartbeatPacket packet = new HeartbeatPacket(password, port);
+	}
+
+	public JapsonClient start() {
 		executor.scheduleAtFixedRate(() -> {
 			try {
-				Boolean success = sendPacket(packet);
-				if (check && success)
+				Boolean success = sendPacket(new HeartbeatPacket(password, port));
+				if (check && success != null && success)
 					valid = true;
 			} catch (TimeoutException | InterruptedException | ExecutionException e) {
 				valid = false;
-				e.printStackTrace();
 			}
 		}, DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
 		logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
+		return this;
 	}
 
 	@Override
@@ -118,6 +124,14 @@ public class JapsonClient extends Japson {
 		return this;
 	}
 
+	public InetAddress getAddress() {
+		return address;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
 	public void shutdown() {
 		executor.shutdown();
 	}
@@ -129,11 +143,11 @@ public class JapsonClient extends Japson {
 	public <T> T sendPacket(ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
 		if (check && !valid && !(packet instanceof HeartbeatPacket))
 			throw new TimeoutException("No connection to the server. Cancelling sending packet.");
-		return sendPacket(address, port, packet, gson);
+		return super.sendPacket(address, port, packet, gson);
 	}
 
 	public void sendPacket(Packet packet) throws InterruptedException, ExecutionException, TimeoutException {
-		sendPacket(address, port, packet, gson);
+		super.sendPacket(address, port, packet, gson);
 	}
 
 }

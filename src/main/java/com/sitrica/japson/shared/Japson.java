@@ -27,18 +27,10 @@ public abstract class Japson {
 	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
 
-	protected final InetAddress address;
-	protected final int port;
-
 	protected int PACKET_SIZE = 1024; // UDP standard
 	protected int TIMEOUT = 2000; // milliseconds
 	protected String password;
 	protected boolean debug;
-
-	protected Japson(InetAddress address, int port) {
-		this.address = address;
-		this.port = port;
-	}
 
 	public Japson registerHandlers(Handler... handlers) {
 		Sets.newHashSet(handlers).stream()
@@ -81,20 +73,12 @@ public abstract class Japson {
 		return logger;
 	}
 
-	public InetAddress getAddress() {
-		return address;
-	}
-
 	public boolean hasPassword() {
 		return password != null;
 	}
 
 	public boolean isDebug() {
 		return debug;
-	}
-
-	public int getPort() {
-		return port;
 	}
 
 	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {

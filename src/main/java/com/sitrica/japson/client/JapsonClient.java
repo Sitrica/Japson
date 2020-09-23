@@ -131,7 +131,7 @@ public class JapsonClient extends Japson {
 		return sendPacket(address, port, packet, gson);
 	}
 
-	public void sendPacket(Packet packet) throws InterruptedException, ExecutionException {
+	public void sendPacket(Packet packet) throws InterruptedException, ExecutionException, TimeoutException {
 		sendPacket(address, port, packet, gson);
 	}
 

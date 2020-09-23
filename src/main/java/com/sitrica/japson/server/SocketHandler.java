@@ -74,4 +74,8 @@ public class SocketHandler implements Runnable {
 		}
 	}
 
+	public void stop() {
+		running = false;
+	}
+
 }

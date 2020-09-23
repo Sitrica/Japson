@@ -21,6 +21,7 @@ public class JapsonServer extends Japson {
 	private final ExecutorService executor = Executors.newCachedThreadPool();
 	protected final Set<Listener> listeners = new HashSet<>();
 	private final Set<Integer> ignored = new HashSet<>();
+	private final SocketHandler handler;
 
 	private long RECONNECT = 5, EXPIRY = 10; // EXPIRY in minutes, DISCONNECT is amount.
 	private final Connections connections;
@@ -59,7 +60,8 @@ public class JapsonServer extends Japson {
 		socket.setSoTimeout(TIMEOUT);
 		connections = new Connections(this);
 		handlers.add(connections);
-		executor.execute(new SocketHandler(PACKET_SIZE, this, socket));
+		handler = new SocketHandler(PACKET_SIZE, this, socket);
+		executor.execute(handler);
 		logger.atInfo().log("Started Japson server bound to %s.", address.getHostAddress() + ":" + port);
 	}
 
@@ -155,6 +157,7 @@ public class JapsonServer extends Japson {
 		connections.shutdown();
 		socket.disconnect();
 		socket.close();
+		handler.stop();
 		executor.shutdown();
 	}
 
@@ -162,6 +165,7 @@ public class JapsonServer extends Japson {
 		connections.kill();
 		socket.disconnect();
 		socket.close();
+		handler.stop();
 		executor.shutdownNow();
 	}
 

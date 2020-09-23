@@ -107,7 +107,8 @@ public abstract class Japson {
 
 	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> japsonPacket, Gson gson) throws TimeoutException, InterruptedException, ExecutionException {
 		return CompletableFuture.supplyAsync(() -> {
-			try (DatagramSocket socket = new DatagramSocket()) {
+			try {
+				DatagramSocket socket = new DatagramSocket();
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
@@ -119,6 +120,7 @@ public abstract class Japson {
 				ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
 						.create(new DatagramPacket(buf, buf.length))
 						.get();
+				socket.close();
 				if (input == null) {
 					logger.atSevere().log("Packet with id %s returned null or an incorrect readable object for Japson", japsonPacket.getID());
 					return null;
@@ -149,7 +151,7 @@ public abstract class Japson {
 		}).get(TIMEOUT, TimeUnit.MILLISECONDS);
 	}
 
-	public void sendPacket(InetAddress address, int port, Packet japsonPacket) throws InterruptedException, ExecutionException {
+	public void sendPacket(InetAddress address, int port, Packet japsonPacket) throws InterruptedException, ExecutionException, TimeoutException {
 		sendPacket(address, port, japsonPacket, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
@@ -157,9 +159,10 @@ public abstract class Japson {
 				.create());
 	}
 
-	public void sendPacket(InetAddress address, int port, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException {
+	public void sendPacket(InetAddress address, int port, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {
 		CompletableFuture.runAsync(() -> {
-			try (DatagramSocket socket = new DatagramSocket()) {
+			try {
+				DatagramSocket socket = new DatagramSocket();
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
@@ -168,6 +171,7 @@ public abstract class Japson {
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
 				if (debug)
 					logger.atInfo().log("Sent non-returnable packet with id %s", japsonPacket.getID());
+				socket.close();
 			} catch (SocketException socketException) {
 				logger.atSevere().withCause(socketException)
 						.atMostEvery(15, TimeUnit.SECONDS)
@@ -177,7 +181,7 @@ public abstract class Japson {
 						.atMostEvery(15, TimeUnit.SECONDS)
 						.log("IO error: " + exception.getMessage());
 			}
-		}).get();
+		}).get(TIMEOUT, TimeUnit.MILLISECONDS);
 	}
 
 }

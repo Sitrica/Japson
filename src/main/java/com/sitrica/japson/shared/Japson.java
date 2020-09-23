@@ -91,8 +91,7 @@ public abstract class Japson {
 
 	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> japsonPacket, Gson gson) throws TimeoutException, InterruptedException, ExecutionException {
 		return CompletableFuture.supplyAsync(() -> {
-			try {
-				DatagramSocket socket = new DatagramSocket();
+			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
@@ -103,7 +102,7 @@ public abstract class Japson {
 				buf = new byte[PACKET_SIZE];
 				ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
 						.create(new DatagramPacket(buf, buf.length))
-						.get();
+						.get(TIMEOUT, TimeUnit.MILLISECONDS);
 				socket.close();
 				if (input == null) {
 					logger.atSevere().log("Packet with id %s returned null or an incorrect readable object for Japson", japsonPacket.getID());
@@ -126,10 +125,8 @@ public abstract class Japson {
 				logger.atSevere().withCause(exception)
 						.atMostEvery(15, TimeUnit.SECONDS)
 						.log("IO error: " + exception.getMessage());
-			} catch (InterruptedException | ExecutionException exception) {
-				logger.atSevere().withCause(exception)
-						.atMostEvery(15, TimeUnit.SECONDS)
-						.log("Timeout: " + exception.getMessage());
+			} catch (InterruptedException | ExecutionException | TimeoutException exception) {
+				// Already handled seperate.
 			}
 			return null;
 		}).get(TIMEOUT, TimeUnit.MILLISECONDS);
@@ -145,8 +142,7 @@ public abstract class Japson {
 
 	public void sendPacket(InetAddress address, int port, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {
 		CompletableFuture.runAsync(() -> {
-			try {
-				DatagramSocket socket = new DatagramSocket();
+			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
 				out.writeInt(japsonPacket.getID());
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));

@@ -29,6 +29,8 @@ public class SocketHandler implements Runnable {
 	@Override
 	public void run() {
 		while (running) {
+			if (socket.isClosed())
+				break;
 			try {
 				byte[] buf = new byte[packetSize];
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -61,6 +63,8 @@ public class SocketHandler implements Runnable {
 							out.writeUTF(json);
 							byte[] returnBuf = out.toByteArray();
 							try {
+								if (socket.isClosed())
+									return;
 								socket.send(new DatagramPacket(returnBuf, returnBuf.length, packet.getAddress(), packet.getPort()));
 								if (japson.isDebug())
 									japson.getLogger().atInfo().log("Returning data %s as packet id %s", json, id);

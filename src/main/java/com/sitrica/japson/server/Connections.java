@@ -154,6 +154,13 @@ public class Connections extends Handler {
 			fails++;
 		}
 
+		@Deprecated
+		/**
+		 * The port of the connection will be the port the server is bound too.
+		 * A client does not bind to a port, so thus it will not be any use.
+		 * 
+		 * @return
+		 */
 		public int getPort() {
 			return port;
 		}

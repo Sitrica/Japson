@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,7 @@ public abstract class Japson {
 	protected final FluentLogger logger = FluentLogger.forEnclosingClass();
 	protected final Set<InetAddress> acceptable = new HashSet<>();
 	protected final Set<Handler> handlers = new HashSet<>();
+	private final Set<Integer> ignored = new HashSet<>();
 
 	protected int PACKET_SIZE = 1024; // UDP standard
 	protected int TIMEOUT = 2000; // milliseconds
@@ -82,6 +84,14 @@ public abstract class Japson {
 		return debug;
 	}
 
+	public final void addIgnoreDebugPackets(Integer... packets) {
+		ignored.addAll(Sets.newHashSet(packets));
+	}
+
+	public final Set<Integer> getIgnoredPackets() {
+		return Collections.unmodifiableSet(ignored);
+	}
+
 	public <T> T sendPacket(InetSocketAddress address, ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
 		return sendPacket(address.getAddress(), address.getPort(), packet, new GsonBuilder()
 				.enableComplexMapKeySerialization()
@@ -127,7 +137,7 @@ public abstract class Japson {
 					return null;
 				}
 				String json = input.readUTF();
-				if (debug)
+				if (debug && (ignored.isEmpty() || !ignored.contains(japsonPacket.getID())))
 					logger.atInfo().log("Sent returnable packet with id %s and recieved %s", japsonPacket.getID(), json);
 				return japsonPacket.getObject(JsonParser.parseString(json).getAsJsonObject());
 			} catch (SocketException socketException) {
@@ -175,7 +185,7 @@ public abstract class Japson {
 				byte[] buf = out.toByteArray();
 				socket.setSoTimeout(TIMEOUT);
 				socket.send(new DatagramPacket(buf, buf.length, address, port));
-				if (debug)
+				if (debug && (ignored.isEmpty() || !ignored.contains(japsonPacket.getID())))
 					logger.atInfo().log("Sent non-returnable packet with id %s and data %s", japsonPacket.getID(), data);
 				socket.close();
 			} catch (SocketException socketException) {

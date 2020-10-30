@@ -20,7 +20,6 @@ public class JapsonServer extends Japson {
 
 	private final ExecutorService executor = Executors.newCachedThreadPool();
 	protected final Set<Listener> listeners = new HashSet<>();
-	private final Set<Integer> ignored = new HashSet<>();
 	private final SocketHandler handler;
 
 	protected final InetAddress address;
@@ -86,10 +85,6 @@ public class JapsonServer extends Japson {
 		return this;
 	}
 
-	public void addIgnoreDebugPackets(Integer... packets) {
-		ignored.addAll(Sets.newHashSet(packets));
-	}
-
 	/**
 	 * The amount of minutes to wait before forgetting about a connection.
 	 * 
@@ -121,10 +116,6 @@ public class JapsonServer extends Japson {
 	public JapsonServer setTimeout(int timeout) {
 		this.TIMEOUT = timeout;
 		return this;
-	}
-
-	public Set<Integer> getIgnoredPackets() {
-		return Collections.unmodifiableSet(ignored);
 	}
 
 	public long getMaxReconnectAttempts() {

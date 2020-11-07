@@ -116,7 +116,7 @@ public abstract class Japson {
 				String json = input.readUTF();
 				if (debug)
 					logger.atInfo().log("Sent returnable packet with id %s and recieved %s", japsonPacket.getID(), json);
-				return japsonPacket.getObject(new JsonParser().parse(json).getAsJsonObject());
+				return japsonPacket.getObject(JsonParser.parseString(json).getAsJsonObject());
 			} catch (SocketException socketException) {
 				logger.atSevere().withCause(socketException)
 						.atMostEvery(15, TimeUnit.SECONDS)

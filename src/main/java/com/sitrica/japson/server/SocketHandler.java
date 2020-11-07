@@ -50,7 +50,7 @@ public class SocketHandler implements Runnable {
 				if (japson.isDebug() && (japson.getIgnoredPackets().isEmpty() || !japson.getIgnoredPackets().contains(id)))
 					japson.getLogger().atInfo().log("Received packet with id %s and data %s", id, data);
 				// Handle
-				JsonObject object = JsonParser.parseString(data).getAsJsonObject();
+				JsonObject object = new JsonParser().parse(data).getAsJsonObject();
 				japson.getHandlers().stream()
 						.filter(handler -> handler.getID() == id)
 						.map(handler -> handler.handle(packet.getAddress(), packet.getPort(), object))

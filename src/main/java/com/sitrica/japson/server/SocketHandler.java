@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
@@ -38,14 +39,14 @@ public class SocketHandler implements Runnable {
 						.create(packet)
 						.get();
 				if (input == null) {
-					japson.getLogger().atSevere().log("Packet received was null or an incorrect readable object for Japson");
-					return;
+					japson.getLogger().atSevere().atMostEvery(30, TimeUnit.SECONDS).log("Packet received was null or an incorrect readable object for Japson");
+					continue;
 				}
 				int id = input.readInt();
 				String data = input.readUTF();
 				if (data == null) {
 					japson.getLogger().atSevere().log("Received packet with id %s and the json was null.", id);
-					return;
+					continue;
 				}
 				if (japson.isDebug() && (japson.getIgnoredPackets().isEmpty() || !japson.getIgnoredPackets().contains(id)))
 					japson.getLogger().atInfo().log("Received packet with id %s and data %s", id, data);
@@ -74,6 +75,10 @@ public class SocketHandler implements Runnable {
 						});
 			} catch (InterruptedException | ExecutionException e) {
 				japson.getListeners().forEach(listener -> listener.onShutdown());
+			} catch (Exception e) {
+				if (japson.isDebug())
+					japson.getLogger().atSevere().atMostEvery(30, TimeUnit.SECONDS).withCause(e);
+				continue;
 			}
 		}
 	}

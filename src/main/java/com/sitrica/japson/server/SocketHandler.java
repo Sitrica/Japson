@@ -76,8 +76,7 @@ public class SocketHandler implements Runnable {
 			} catch (InterruptedException | ExecutionException e) {
 				japson.getListeners().forEach(listener -> listener.onShutdown());
 			} catch (Exception e) {
-				if (japson.isDebug())
-					japson.getLogger().atSevere().atMostEvery(30, TimeUnit.SECONDS).withCause(e);
+				japson.getLogger().atSevere().atMostEvery(30, TimeUnit.SECONDS).withCause(e);
 				continue;
 			}
 		}

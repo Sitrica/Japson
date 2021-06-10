@@ -1,5 +1,6 @@
 # Japson
 ### A Java Protocol using Gson with Heartbeat
+(Ja)va-(P)rotocol-G(son)
 
 Report all issues in our issues tab.
 

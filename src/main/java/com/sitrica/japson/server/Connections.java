@@ -1,6 +1,5 @@
 package com.sitrica.japson.server;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +43,9 @@ public class Connections extends Handler {
 				}).build(new CacheLoader<InetSocketAddress, JapsonConnection>() {
 					@Override
 					public JapsonConnection load(InetSocketAddress address) throws Exception {
-						return getConnection(address.getAddress(), address.getPort())
+						return getConnection(address)
 								.orElseGet(() -> {
-									JapsonConnection created = new JapsonConnection(address.getAddress(), address.getPort());
+									JapsonConnection created = new JapsonConnection(address);
 									connections.add(created);
 									return created;
 								});
@@ -60,46 +59,45 @@ public class Connections extends Handler {
 				connection.unresponsive();
 				if (connection.getUnresponsiveCount() > japson.getMaxReconnectAttempts()) {
 					japson.getListeners().forEach(listener -> listener.onDisconnect(connection));
-					disconnected.put(InetSocketAddress.createUnresolved(connection.getAddress().getHostName(), connection.getPort()), connection);
+					disconnected.put(connection.getAddress(), connection);
 				}
 			}
 			connections.removeIf(connection -> connection.getUnresponsiveCount() > japson.getMaxReconnectAttempts());
 		}, 1, TimeUnit.SECONDS);
 	}
 
-	public JapsonConnection addConnection(InetAddress address, int port) {
-		return getConnection(address, port)
+	public JapsonConnection addConnection(InetSocketAddress address) {
+		return getConnection(address)
 				.orElseGet(() -> {
-					JapsonConnection connection = new JapsonConnection(address, port);
+					JapsonConnection connection = new JapsonConnection(address);
 					japson.getListeners().forEach(listener -> listener.onAcquiredCommunication(connection));
 					connections.add(connection);
 					return connection;
 				});
 	}
 
-	public Optional<JapsonConnection> getConnection(InetAddress address, int port) {
+	public Optional<JapsonConnection> getConnection(InetSocketAddress address) {
 		Optional<JapsonConnection> optional = connections.stream()
 				.filter(existing -> existing.getAddress().equals(address))
-				.filter(existing -> existing.getPort() == port)
 				.findFirst();
 		if (optional.isPresent())
 			return optional;
-		InetSocketAddress socketAddress = InetSocketAddress.createUnresolved(address.getHostName(), port);
-		optional = Optional.ofNullable(disconnected.getIfPresent(socketAddress));
+		optional = Optional.ofNullable(disconnected.getIfPresent(address));
 		if (!optional.isPresent())
 			return Optional.empty();
 		JapsonConnection connection = optional.get();
 		japson.getListeners().forEach(listener -> listener.onReacquiredCommunication(connection));
 		connections.add(connection);
-		disconnected.invalidate(socketAddress);
+		disconnected.invalidate(address);
 		return optional;
 	}
 
 	@Override
-	public JsonObject handle(InetAddress address, int packetPort, JsonObject json) {
+	public JsonObject handle(InetSocketAddress address, JsonObject json) {
 		int port = json.get("port").getAsInt();
+		InetSocketAddress server = InetSocketAddress.createUnresolved(address.getHostName(), port);
 		if (!japson.hasPassword()) {
-			JapsonConnection connection = addConnection(address, port);
+			JapsonConnection connection = addConnection(server);
 			connection.update();
 		} else {
 			Optional<JsonElement> optional = Optional.ofNullable(json.get("password"));
@@ -107,10 +105,10 @@ public class Connections extends Handler {
 				return null;
 			String password = optional.get().getAsString();
 			if (!japson.passwordMatches(password)) {
-				japson.getLogger().atWarning().log("A packet from %s did not match the correct password!", address.getHostName());
+				japson.getLogger().atWarning().log("A packet from %s did not match the correct password!", server.getHostName());
 				return null;
 			}
-			JapsonConnection connection = addConnection(address, port);
+			JapsonConnection connection = addConnection(server);
 			connection.update();
 		}
 		JsonObject returning = new JsonObject();
@@ -129,20 +127,18 @@ public class Connections extends Handler {
 	public class JapsonConnection {
 
 		private long updated = System.currentTimeMillis();
-		private final InetAddress address;
-		private final int port;
+		private final InetSocketAddress address;
 		private int fails = 0;
 
-		public JapsonConnection(InetAddress address, int port) {
+		public JapsonConnection(InetSocketAddress address) {
 			this.address = address;
-			this.port = port;
 		}
 
 		public int getUnresponsiveCount() {
 			return fails;
 		}
 
-		public InetAddress getAddress() {
+		public InetSocketAddress getAddress() {
 			return address;
 		}
 
@@ -152,17 +148,6 @@ public class Connections extends Handler {
 
 		public void unresponsive() {
 			fails++;
-		}
-
-		@Deprecated
-		/**
-		 * The port of the connection will be the port the server is bound too.
-		 * A client does not bind to a port, so thus it will not be any use.
-		 * 
-		 * @return
-		 */
-		public int getPort() {
-			return port;
 		}
 
 		public void update() {

@@ -3,6 +3,7 @@ package com.sitrica.japson.server;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +55,7 @@ public class SocketHandler implements Runnable {
 				JsonObject object = new JsonParser().parse(data).getAsJsonObject();
 				japson.getHandlers().stream()
 						.filter(handler -> handler.getID() == id)
-						.map(handler -> handler.handle(packet.getAddress(), packet.getPort(), object))
+						.map(handler -> handler.handle((InetSocketAddress)packet.getSocketAddress(), object))
 						.filter(jsonObject -> jsonObject != null)
 						.findFirst()
 						.ifPresent(jsonObject -> {

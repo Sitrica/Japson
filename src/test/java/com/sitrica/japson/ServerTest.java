@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -22,12 +22,13 @@ public class ServerTest {
 			japson = new JapsonServer(1337)
 					.setPassword("test-password")
 					.enableDebug();
+			assertNotNull(japson);
 			japson.registerHandlers(new Handler[] {new Handler(0x01) {
 				@Override
-				public JsonObject handle(InetAddress address, int port, JsonObject object) {
+				public JsonObject handle(InetSocketAddress address, JsonObject object) {
 					assertNotNull(object);
 					assertTrue(object.has("value"));
-					assertEquals(address, japson.getAddress());
+					assertEquals(address.getAddress(), japson.getAddress().getAddress());
 					String value = object.get("value").getAsString();
 					assertEquals(value, "testing Japson");
 					JsonObject returnJson = new JsonObject();
@@ -36,10 +37,10 @@ public class ServerTest {
 				}
 			}, new Handler(0x02) {
 				@Override
-				public JsonObject handle(InetAddress address, int port, JsonObject object) {
+				public JsonObject handle(InetSocketAddress address, JsonObject object) {
 					assertNotNull(object);
 					assertTrue(object.has("value2"));
-					assertEquals(address, japson.getAddress());
+					assertEquals(address.getAddress(), japson.getAddress().getAddress());
 					String value = object.get("value2").getAsString();
 					assertEquals(value, "testing Japson 2");
 					JsonObject returnJson = new JsonObject();
@@ -48,10 +49,10 @@ public class ServerTest {
 				}
 			}, new Executor(0x03) {
 				@Override
-				public void execute(InetAddress address, int port, JsonObject object) {
+				public void execute(InetSocketAddress address, JsonObject object) {
 					assertNotNull(object);
 					assertTrue(object.has("test"));
-					assertEquals(address, japson.getAddress());
+					assertEquals(address.getAddress(), japson.getAddress().getAddress());
 					String value = object.get("test").getAsString();
 					assertEquals(value, "test");
 				}

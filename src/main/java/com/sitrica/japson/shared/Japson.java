@@ -93,15 +93,7 @@ public abstract class Japson {
 	}
 
 	public <T> T sendPacket(InetSocketAddress address, ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
-		return sendPacket(address.getAddress(), address.getPort(), packet, new GsonBuilder()
-				.enableComplexMapKeySerialization()
-				.serializeNulls()
-				.setLenient()
-				.create());
-	}
-
-	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
-		return sendPacket(address, port, packet, new GsonBuilder()
+		return sendPacket(address, packet, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
 				.setLenient()
@@ -109,10 +101,6 @@ public abstract class Japson {
 	}
 
 	public <T> T sendPacket(InetSocketAddress address, ReturnablePacket<T> japsonPacket, Gson gson) throws TimeoutException, InterruptedException, ExecutionException {
-		return sendPacket(address.getAddress(), address.getPort(), japsonPacket, gson);
-	}
-
-	public <T> T sendPacket(InetAddress address, int port, ReturnablePacket<T> japsonPacket, Gson gson) throws TimeoutException, InterruptedException, ExecutionException {
 		return CompletableFuture.supplyAsync(() -> {
 			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
@@ -120,7 +108,7 @@ public abstract class Japson {
 				out.writeUTF(gson.toJson(japsonPacket.toJson()));
 				byte[] buf = out.toByteArray();
 				socket.setSoTimeout(TIMEOUT);
-				socket.send(new DatagramPacket(buf, buf.length, address, port));
+				socket.send(new DatagramPacket(buf, buf.length, address));
 				// Reset the byte buffer
 				buf = new byte[PACKET_SIZE];
 				ByteArrayDataInput input = new ReceiverFuture(logger, this, socket)
@@ -156,15 +144,7 @@ public abstract class Japson {
 	}
 
 	public void sendPacket(InetSocketAddress address, Packet japsonPacket) throws InterruptedException, ExecutionException, TimeoutException {
-		sendPacket(address.getAddress(), address.getPort(), japsonPacket, new GsonBuilder()
-				.enableComplexMapKeySerialization()
-				.serializeNulls()
-				.setLenient()
-				.create());
-	}
-
-	public void sendPacket(InetAddress address, int port, Packet japsonPacket) throws InterruptedException, ExecutionException, TimeoutException {
-		sendPacket(address, port, japsonPacket, new GsonBuilder()
+		sendPacket(address, japsonPacket, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
 				.setLenient()
@@ -172,10 +152,6 @@ public abstract class Japson {
 	}
 
 	public void sendPacket(InetSocketAddress address, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {
-		sendPacket(address.getAddress(), address.getPort(), japsonPacket, gson);
-	}
-
-	public void sendPacket(InetAddress address, int port, Packet japsonPacket, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {
 		CompletableFuture.runAsync(() -> {
 			try (DatagramSocket socket = new DatagramSocket()) {
 				ByteArrayDataOutput out = ByteStreams.newDataOutput();
@@ -184,7 +160,7 @@ public abstract class Japson {
 				out.writeUTF(data);
 				byte[] buf = out.toByteArray();
 				socket.setSoTimeout(TIMEOUT);
-				socket.send(new DatagramPacket(buf, buf.length, address, port));
+				socket.send(new DatagramPacket(buf, buf.length, address));
 				if (debug && (ignored.isEmpty() || !ignored.contains(japsonPacket.getID())))
 					logger.atInfo().log("Sent non-returnable packet with id %s and data %s", japsonPacket.getID(), data);
 				socket.close();

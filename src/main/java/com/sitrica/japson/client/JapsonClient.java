@@ -59,7 +59,7 @@ public class JapsonClient extends Japson {
 				valid = false;
 			}
 		}, DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
-		logger.atInfo().log("Started Japson client bound to %s.", address.getAddress().getHostName() + ":" + address.getPort());
+		logger.atInfo().log("Started Japson client bound to %s.", address.getHostName() + ":" + address.getPort());
 		return this;
 	}
 

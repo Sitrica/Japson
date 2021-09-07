@@ -34,7 +34,8 @@ public class GeneralTest {
 	@Test
 	@Order(3)
 	public void sendPacket() {
-		assertEquals(ClientTest.japson.getAddress(), ServerTest.japson.getAddress());
+		assertEquals(ClientTest.japson.getAddress().getAddress(), ServerTest.japson.getAddress().getAddress());
+		//assertEquals(ClientTest.japson.getAddress().getPort(), ServerTest.japson.getAddress().getPort());
 		String value = "testing Japson", value2 = "testing Japson 2";
 		String returned = null, second = null;
 		try {

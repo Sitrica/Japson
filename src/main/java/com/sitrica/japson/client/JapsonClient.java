@@ -1,6 +1,7 @@
 package com.sitrica.japson.client;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -22,22 +23,17 @@ public class JapsonClient extends Japson {
 
 	protected long HEARTBEAT = 1000L, DELAY = 1000L; // in milliseconds.
 
-	protected final InetAddress address;
-	protected final int port;
+	protected final InetSocketAddress address;
 
 	private boolean check, valid = true;
 	private final Gson gson;
 
 	public JapsonClient(int port) throws UnknownHostException {
-		this(InetAddress.getLocalHost(), port);
+		this(new InetSocketAddress(InetAddress.getLocalHost().getHostName(), port));
 	}
 
-	public JapsonClient(String host, int port) throws UnknownHostException {
-		this(InetAddress.getByName(host), port);
-	}
-
-	public JapsonClient(InetAddress address, int port) {
-		this(address, port, new GsonBuilder()
+	public JapsonClient(InetSocketAddress address) {
+		this(address, new GsonBuilder()
 				.enableComplexMapKeySerialization()
 				.serializeNulls()
 				.setLenient()
@@ -45,30 +41,25 @@ public class JapsonClient extends Japson {
 	}
 
 	public JapsonClient(int port, Gson gson) throws UnknownHostException {
-		this(InetAddress.getLocalHost(), port, gson);
+		this(new InetSocketAddress(InetAddress.getLocalHost().getHostName(), port), gson);
 	}
 
-	public JapsonClient(String host, int port, Gson gson) throws UnknownHostException {
-		this(InetAddress.getByName(host), port, gson);
-	}
-
-	public JapsonClient(InetAddress address, int port, Gson gson) {
+	public JapsonClient(InetSocketAddress address, Gson gson) {
 		this.address = address;
-		this.port = port;
 		this.gson = gson;
 	}
 
 	public JapsonClient start() {
 		executor.scheduleAtFixedRate(() -> {
 			try {
-				Boolean success = sendPacket(new HeartbeatPacket(password, port));
+				Boolean success = sendPacket(new HeartbeatPacket(password, address.getPort()));
 				if (check && success != null && success)
 					valid = true;
 			} catch (TimeoutException | InterruptedException | ExecutionException e) {
 				valid = false;
 			}
 		}, DELAY, HEARTBEAT, TimeUnit.MILLISECONDS);
-		logger.atInfo().log("Started Japson client bound to %s.", address.getHostAddress() + ":" + port);
+		logger.atInfo().log("Started Japson client bound to %s.", address.getHostName() + ":" + address.getPort());
 		return this;
 	}
 
@@ -124,12 +115,8 @@ public class JapsonClient extends Japson {
 		return this;
 	}
 
-	public InetAddress getAddress() {
+	public InetSocketAddress getAddress() {
 		return address;
-	}
-
-	public int getPort() {
-		return port;
 	}
 
 	public void shutdown() {
@@ -143,11 +130,11 @@ public class JapsonClient extends Japson {
 	public <T> T sendPacket(ReturnablePacket<T> packet) throws TimeoutException, InterruptedException, ExecutionException {
 		if (check && !valid && !(packet instanceof HeartbeatPacket))
 			throw new TimeoutException("No connection to the server. Cancelling sending packet.");
-		return super.sendPacket(address, port, packet, gson);
+		return super.sendPacket(address, packet, gson);
 	}
 
 	public void sendPacket(Packet packet) throws InterruptedException, ExecutionException, TimeoutException {
-		super.sendPacket(address, port, packet, gson);
+		super.sendPacket(address, packet, gson);
 	}
 
 }
